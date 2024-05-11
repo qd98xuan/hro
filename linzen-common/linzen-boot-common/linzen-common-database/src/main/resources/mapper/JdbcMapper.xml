@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linzen.database.mapper.JdbcMapper">
+
+    <select id="getListSql" parameterType="String" resultType="map">
+        ${sql}
+    </select>
+
+    <update id="updateSql" parameterType="String">
+        ${sql}
+    </update>
+
+    <delete id="deleteSql" parameterType="String">
+        ${sql}
+    </delete>
+
+    <insert id="insertSql" parameterType="String">
+        ${sql}
+    </insert>
+
+    <update id="updatesSql" parameterType="String" statementType="STATEMENT">
+        ${sql}
+    </update>
+
+</mapper>

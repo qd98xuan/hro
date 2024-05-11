@@ -1,0 +1,103 @@
+package com.linzen.config;
+
+import cn.dev33.satoken.config.SaTokenConfig;
+import com.linzen.consts.AuthConsts;
+import com.linzen.model.BaseSystemInfo;
+import com.linzen.util.TenantProvider;
+
+import java.util.Optional;
+
+
+/**
+ *
+ * @author FHNP
+ * @copyright 领致信息技术有限公司
+ */
+public class TokenConfigration extends SaTokenConfig {
+
+
+    @Override
+    public long getTimeout() {
+        BaseSystemInfo baseSystemInfo = getSycConfig();
+        if(baseSystemInfo == null){
+            return super.getTimeout();
+        }else {
+            return Long.parseLong(getSycConfig().getTokenTimeout()) * 60L;
+        }
+    }
+
+    @Override
+    public Boolean getIsConcurrent() {
+        BaseSystemInfo baseSystemInfo = getSycConfig();
+        if(baseSystemInfo == null){
+            return super.getIsConcurrent();
+        }else {
+            return Optional.ofNullable(getSycConfig().getSingleLogin()).orElse(1)==2;
+        }
+    }
+
+    @Override
+    public String getJwtSecretKey() {
+        String secrekey = super.getJwtSecretKey();
+        if(secrekey == null){
+            return AuthConsts.JWT_SECRET;
+        }
+        return secrekey;
+    }
+
+    @Override
+    public String getCurrDomain() {
+        return super.getCurrDomain();
+    }
+
+    @Override
+    public String getTokenPrefix() {
+        return AuthConsts.TOKEN_PREFIX;
+    }
+
+    @Override
+    public Boolean getTokenSessionCheckLogin() {
+        return false;
+    }
+
+    @Override
+    public Boolean getIsPrint() {
+        return false;
+    }
+
+    @Override
+    public Boolean getIsShare() {
+        return false;
+    }
+
+    @Override
+    public String getTokenName() {
+        return "Authorization";
+    }
+
+    @Override
+    public Boolean getIsReadCookie() {
+        return false;
+    }
+
+    @Override
+    public Boolean getIsReadBody() {
+        return false;
+    }
+
+    @Override
+    public Boolean getIsReadHeader() {
+        return true;
+    }
+
+    @Override
+    public int getMaxLoginCount() {
+        return -1;
+    }
+
+    private BaseSystemInfo getSycConfig(){
+        return TenantProvider.getBaseSystemInfo();
+    }
+
+
+}

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.admin.dao.XxlJobLogReportDao">
+	
+	<resultMap id="XxlJobLogReport" type="com.xxl.job.admin.core.model.XxlJobLogReport" >
+		<result column="id" property="id" />
+	    <result column="trigger_day" property="triggerDay" />
+		<result column="running_count" property="runningCount" />
+	    <result column="suc_count" property="sucCount" />
+	    <result column="fail_count" property="failCount" />
+	</resultMap>
+
+	<sql id="Base_Column_List">
+		t.id,
+		t.trigger_day,
+		t.running_count,
+		t.suc_count,
+		t.fail_count
+	</sql>
+
+	<select id="queryLogReportTotal" resultMap="XxlJobLogReport">
+		SELECT
+			SUM(running_count) running_count,
+			SUM(suc_count) suc_count,
+			SUM(fail_count) fail_count
+		FROM xxl_job_log_report t
+	</select>
+
+</mapper>

@@ -1,0 +1,44 @@
+## api接口
+#set($url="import { defHttp } from '/@/utils/http/axios';")
+$url
+
+// 获取列表
+export function getList(data) {
+  #set($getListReq=".post({ url: '/api/"+${context.module}+"/"+${context.className}+"/getList', data })")
+  return defHttp$getListReq;
+}
+// 新建
+export function create(data) {
+  #set($createReq=".post({ url:'/api/"+${context.module}+"/"+${context.className}+"', data })")
+  return defHttp$createReq;
+}
+// 修改
+export function update(data) {
+  #set($updateReq=".put({ url: '/api/"+${context.module}+"/"+${context.className}+"/'+ data.id, data })")
+  return defHttp$updateReq;
+}
+// 详情(无转换数据)
+export function getInfo(id) {
+  #set($getInfoReq=".get({ url: '/api/"+${context.module}+"/"+${context.className}+"/' + id })")
+  return defHttp$getInfoReq;
+}
+// 获取(转换数据)
+export function getDetailInfo(id) {
+  #set($getDetailInfoReq=".get({ url: '/api/"+${context.module}+"/"+${context.className}+"/detail/' + id })")
+  return defHttp$getDetailInfoReq;
+}
+// 删除
+export function del(id) {
+  #set($delReq=".delete({ url: '/api/"+${context.module}+"/"+${context.className}+"/' + id })")
+  return defHttp$delReq;
+}
+// 批量删除数据
+export function batchDelete(data) {
+  #set($batchDeleteReq=".delete({ url: '/api/"+${context.module}+"/"+${context.className}+"/batchRemove', data })")
+  return defHttp$batchDeleteReq;
+}
+// 导出
+export function exportData(data) {
+  #set($exportDataReq=".post({ url: '/api/"+${context.module}+"/"+${context.className}+"/Actions/Export', data })")
+  return defHttp$exportDataReq;
+}

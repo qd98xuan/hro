@@ -1,0 +1,1051 @@
+#parse("PublicMacro/AppFormMarco.vm")
+<template>
+    <view class="linzen-wrap linzen-wrap-form" v-if="!loading">
+        <u-form :model="${context.formModel}" :rules="${context.formRules}" ref="${context.formModel}" :errorType="['toast']"
+				#set($position='left')
+				#if(${context.labelPosition}=='top')
+					#set($position='top')
+				#end
+				#set($align='left')
+				#if(${context.labelPosition}=='right')
+					#set($align='right')
+				#end
+                label-position="${position}" label-align="${align}" :label-width="labelwidth" class="linzen-form">
+			#AppFormRendering()
+        </u-form>
+		#if(${isFlow}==false)
+			#if(${context.webType}=='1')
+				<view class="buttom-actions">
+					<u-button class="buttom-btn" @click="resetForm">重置</u-button>
+					<u-button class="buttom-btn" type="primary" @click="submitForm" :loading="btnLoading">确定</u-button>
+				</view>
+			#else
+				<view class="buttom-actions" v-if="jurisdictionType != 'btn_detail'" >
+					<u-button class="buttom-btn" :loading="btnLoading" @click="showAction = true" v-if="actionList.length>0">
+						更多<u-icon name="arrow-down" size="24"></u-icon>
+					</u-button>
+					<u-button class="buttom-btn" type="primary" @click="submitForm" :loading="btnLoading">确定</u-button>
+					<u-button class="buttom-btn" @click="resetForm">取消</u-button>
+				</view>
+				<u-action-sheet @click="handleAction" :list="actionList" :tips="{ text: '更多操作' , color: '#000' , fontSize: 30 }" v-model="showAction">
+				</u-action-sheet>
+			#end
+		#end
+		<u-modal v-model="show" :content="content" width='70%' border-radius="16" :content-style="{fontSize: '28rpx',padding: '20rpx',lineHeight: '44rpx',textAlign: 'left'}"
+				 :titleStyle="{padding: '20rpx'}" :confirm-style="{height: '80rpx',lineHeight: '80rpx'}" :title="title" confirm-text="确定">
+			<view class="slot-content">
+				<rich-text :nodes="content"></rich-text>
+			</view>
+		</u-modal>
+    </view>
+</template>
+
+<script>
+    import {
+        getDictionaryDataSelector,
+		getDataInterfaceRes
+    } from '@/api/common'
+	#if(${isFlow})
+	import comMixin from '../mixin'
+	#end
+	import {
+		getDateDay,
+		getLaterData,
+		getBeforeData,
+		getBeforeTime,
+		getLaterTime
+	} from '@/components/index.js'
+    import request from '@/utils/request'
+	import {
+		useBaseStore
+	} from '@/store/modules/base'
+    export default {
+		#if(${isFlow})
+			mixins: [comMixin],
+		#end
+        data(){
+            return{
+				idList: [],
+				index:0,
+				actionList: [],
+				actionListLength: false,
+				showAction: false,
+                btnLoading: false,
+				loading: false,
+                text: '提示：测试文本',
+                tableKey:'',
+				${context.formModel}:{
+					${pKeyName}:"",
+					#foreach($fieLdsModel in ${context.fields})
+						#set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+						#set($vModel = "${html.vModel}")
+						#set($config = $html.config)
+						#set($linzenkey = "${config.projectKey}")
+						#if($vModel)
+							#if($!config.valueType=='String')
+					$!{vModel} : '$!{config.defaultValue}',
+							#elseif($!config.valueType=='undefined')
+					$!{vModel} : undefined,
+							#else
+					$!{vModel} : $!{config.defaultValue},
+							#end
+						#end
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+					#set($fieldsAll = $masetkey.value)
+						#foreach($fieLdsModel in ${fieldsAll})
+							#set($mastTableModel = $fieLdsModel.formMastTableModel)
+							#set($html = $fieLdsModel.formMastTableModel.mastTable.fieLdsModel)
+							#set($vModel = "${mastTableModel.vModel}")
+							#set($config = $html.config)
+							#set($linzenkey = "${config.projectKey}")
+							#if($vModel)
+								#if($!config.valueType=='String')
+					$!{vModel} : '$!{config.defaultValue}',
+								#elseif($!config.valueType=='undefined')
+					$!{vModel} : undefined,
+								#else
+					$!{vModel} : $!{config.defaultValue},
+								#end
+							#end
+						#end
+					#end
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+					${className}List:[],
+					#end
+				},
+				${context.formRules}:{
+					#foreach($fields in ${context.fields})
+						#set($fieLdsModel = $fields.formColumnModel.fieLdsModel)
+						#appRule($fieLdsModel)
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+						#set($fieldsAll = $masetkey.value)
+						#foreach($fields in ${fieldsAll})
+							#set($fieLdsModel = $fields.formMastTableModel.mastTable.fieLdsModel)
+							#appRule($fieLdsModel)
+						#end
+					#end
+				},
+				#foreach($fields in ${context.fields})
+					#set($fieLdsModel = $fields.formColumnModel.fieLdsModel)
+					#list($fieLdsModel,'')
+				#end
+				#foreach($masetkey in $mastTableList.entrySet())
+					#set($fieldsAll = $masetkey.value)
+					#foreach($fields in ${fieldsAll})
+						#set($fieLdsModel = $fields.formMastTableModel.mastTable.fieLdsModel)
+						#list($fieLdsModel,'')
+					#end
+				#end
+				#foreach($child in ${context.children})
+					#set($className = "${child.className}")
+					#foreach($childList in ${child.childList})
+						#set($fieLdsModel = $childList.fieLdsModel)
+						#list($fieLdsModel,$className)
+					#end
+				#end
+				#foreach($fieLdsModel in ${context.form})
+					#set($linzenkey = "${fieLdsModel.projectKey}")
+					#set($isEnd = "${fieLdsModel.isEnd}")
+					#set($formModel = ${fieLdsModel.formModel})
+					#set($model = "${formModel.model}")
+					#set($outermost = ${formModel.outermost})
+					#set($children = ${formModel.children})
+					#if($linzenkey=='tab' || $linzenkey=='collapse')
+						#if(${isEnd}=='0')
+							#if(${outermost}=='0')
+								#if($linzenkey=='collapse')
+				${model}active: #if($formModel.accordion) '${formModel.active}' #else ${formModel.active}  #end,
+								#end
+				${model}Current:${formModel.activeIndex},
+				${model}Data:[
+								#foreach($childrenList in $children)
+					{
+						title: "${childrenList.title}"
+					},
+								#end
+				],
+							#end
+						#end
+					#end
+				#end
+                labelwidth:${context.labelWidth}*1.5,
+                menuId:'',
+				jurisdictionType:'',
+                ruleList:{
+				#foreach($child in ${context.children})
+					#set($className = "${child.className}")
+					#set($childLable = "${child.label}")
+					${className}List:{
+						#foreach($html in ${child.childList})
+							#set($fieLdsModel = ${html.fieLdsModel})
+							#set($vModel = "${fieLdsModel.vModel}")
+							#set($config = ${fieLdsModel.config})
+							#set($linzenkey = "${config.projectKey}")
+							#set($label = "${config.label}")
+							#if($config.required==true)
+								#if($linzenkey!='switch')
+					'${vModel}' : '${childLable}-${label}不能为空',
+								#end
+							#end
+						#end
+					},
+				#end
+                },
+				ableRelation:{
+					#foreach($html in ${context.fields})
+						#set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+						#ableRelation($fieLdsModel,'')
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+						#set($fieldsAll = $masetkey.value)
+						#foreach($html in ${fieldsAll})
+							#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+							#ableRelation($fieLdsModel,'')
+						#end
+					#end
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+						#foreach($childList in ${child.childList})
+							#set($fieLdsModel = $childList.fieLdsModel)
+							#ableRelation($fieLdsModel,$className)
+						#end
+					#end
+				},
+				interfaceRes:{
+					#foreach($html in ${context.fields})
+						#set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+						#faceRes($fieLdsModel,'')
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+						#set($fieldsAll = $masetkey.value)
+						#foreach($html in ${fieldsAll})
+							#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+							#faceRes($fieLdsModel,'')
+						#end
+					#end
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+						#foreach($childList in ${child.childList})
+							#set($fieLdsModel = $childList.fieLdsModel)
+							#faceRes($fieLdsModel,$className)
+						#end
+					#end
+				},
+				maskConfig:{
+					#foreach($html in ${context.fields})
+						#set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+						#maskConfig($fieLdsModel,'')
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+						#set($fieldsAll = $masetkey.value)
+						#foreach($html in ${fieldsAll})
+							#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+							#maskConfig($fieLdsModel,'')
+						#end
+					#end
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+						#foreach($childList in ${child.childList})
+							#set($fieLdsModel = $childList.fieLdsModel)
+							#maskConfig($fieLdsModel,$className)
+						#end
+					#end
+				},
+				locationScope:{
+					#foreach($html in ${context.fields})
+						#set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+						#locationScope($fieLdsModel,'')
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+						#set($fieldsAll = $masetkey.value)
+						#foreach($html in ${fieldsAll})
+							#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+							#locationScope($fieLdsModel,'')
+						#end
+					#end
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+						#foreach($childList in ${child.childList})
+							#set($fieLdsModel = $childList.fieLdsModel)
+							#locationScope($fieLdsModel,$className)
+						#end
+					#end
+				},
+				regList:{
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+						#set($childLable = "${child.label}")
+					${className}List:{
+							#foreach($html in ${child.childList})
+								#set($fieLdsModel = ${html.fieLdsModel})
+								#set($vModel = "${fieLdsModel.vModel}")
+								#set($config = ${fieLdsModel.config})
+								#set($listSize=$!{config.regList})
+								#set($linzenkey = "${config.projectKey}")
+								#set($label = "${config.label}")
+								#if($vModel)
+						${vModel}: [
+							#if($listSize && $listSize.size()>0)
+								#foreach($regList in ${config.regList})
+							{
+								pattern: ${regList.pattern},
+								message: '${childLable}-${label}${regList.message}',
+							},
+								#end
+							#end
+						],
+							#end
+						#end
+					},
+					#end
+				},
+				ableAll:{
+					#foreach($html in ${context.fields})
+						#set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+						#appableAll($fieLdsModel,'')
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+						#set($fieldsAll = $masetkey.value)
+						#foreach($html in ${fieldsAll})
+							#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+							#appableAll($fieLdsModel,'')
+						#end
+					#end
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+						#foreach($childList in ${child.childList})
+							#set($fieLdsModel = $childList.fieLdsModel)
+							#appableAll($fieLdsModel,$className)
+						#end
+					#end
+				},
+				childIndex:-1,
+				dataValue:{},
+				isEdit:false,
+				userInfo:{},
+				content:'',
+				title:'',
+				show:false,
+            }
+        },
+		created(){
+			uni.$on('linkPageConfirm', (subVal) => {
+				if (this.tableKey) {
+					for (let i = 0; i < subVal.length; i++) {
+						let t = subVal[i]
+						if (this['get' + this.tableKey]) {
+							this['get' + this.tableKey](t)
+						}
+					}
+					this.childIndex = -1
+					this.collapse()
+				}
+			})
+			uni.$on('initCollapse', () => {
+				//初始化折叠面板高度高度
+				this.collapse()
+			})
+		},
+        onLoad(option) {
+			this.jurisdictionType = option.jurisdictionType
+        	this.menuId=option.menuId
+			this.userInfo = uni.getStorageSync('userInfo') || {}
+            this.${context.formModel}.${pKeyName} = option.id || 0
+			let _title = ""
+			if(option.jurisdictionType =='btn_edit'){
+				 _title = "编辑"
+			}
+			if(option.jurisdictionType =='btn_detail'){
+				_title = "详情"
+			}
+			if(option.jurisdictionType =='btn_add'){
+				_title = "新增"
+			}
+			if(_title){
+				uni.setNavigationBarTitle({
+					title: _title
+				})
+			}
+            this.selfInit()
+			this.initDefaultData()
+            this.dataAll()
+            this.initData()
+			this.dataValue = JSON.parse(JSON.stringify(this.${context.formModel}))
+			this.idList = option.idList?option.idList.split(","):[]
+			for(let i=0;i<this.idList.length;i++){
+				if(this.idList[i]==option.id){
+					this.index = i;
+				}
+			}
+			#if($context.hasConfirmAndAddBtn)
+			if (!option.id) {
+				this.actionList.push({
+					text: '确定并新增',
+					id: 'save_add'
+				})
+			} else {
+				let upper={
+					text: '上一条',
+					id: 'upper',
+					disabled: this.index==0?true:false
+				}
+				this.actionList.push(upper)
+				let lower={
+					text: '下一条',
+					id: 'lower',
+					disabled: this.index==this.idList.length-1?true:false
+				}
+				this.actionList.push(lower)
+				this.actionList.push( {
+					text: '确定并继续',
+					id: 'save_proceed'
+				})
+				this.collapse()
+			}
+			#end
+			setTimeout(() => {
+				uni.$emit('initCollapse')
+			}, 50)
+			uni.$on('initCollapse', () => {
+				//初始化折叠面板高度高度
+				this.collapse()
+			})
+        },
+        onReady() {
+            #set($rulesAll = "this."+${context.formRules})
+			this.$nextTick(()=>{
+				setTimeout(()=>{
+					this.$refs.${context.formModel}.setRules(${rulesAll});
+				},100)
+			})
+        },
+        watch:{
+        	dataForm: {
+				handler(val, oldVal) {
+				#foreach($child in ${context.children})
+					#set($className = "${child.className}")
+					this.${className}()
+				#end
+				},
+				deep: true
+			}
+        },
+        methods:{
+			handleAction(index) {
+				if (this.actionList[index].id === 'save_add' || this.actionList[index].id === 'save_proceed') {
+					this.submitForm(1)
+				} else {
+					this.calculation(this.actionList[index].id, index)
+				}
+			},
+			onCollapseChange() {
+				uni.$emit('initCollapse')
+			},
+			calculation(type, index) {
+				if (type === 'upper') {
+					this.index--
+					this.actionList[index + 1].disabled = false
+					if (this.index == 0) this.actionList[index].disabled = true
+				} else {
+					this.index++
+					this.actionList[index - 1].disabled = false
+					if (this.index == this.idList.length - 1) this.actionList[index].disabled = true
+				}
+				this.${context.formModel}.${pKeyName} = this.idList[this.index]
+				this.initData()
+			},
+			 changeData(model, index) {
+				this.isEdit = false
+				this.childIndex = index
+				let modelAll = model.split("-");
+				let faceMode = "";
+				for (let i = 0; i < modelAll.length; i++) {
+					faceMode += modelAll[i];
+				}
+				 for(let key in this.ableRelation){
+					 if(key == faceMode && this.ableRelation[key]){
+						 let valueAll = this.ableRelation[key].split("-")
+						 if(valueAll.length>1){
+							 let value = this.${context.formModel}[valueAll[0]+"List"][index][valueAll[1]]
+							 if(Array.isArray(value)){
+								 this.${context.formModel}[valueAll[0]+"List"][index][valueAll[1]] = []
+							 }else{
+								 this.${context.formModel}[valueAll[0]+"List"][index][valueAll[1]] = undefined
+							 }
+						 }else{
+							 let value = this.${context.formModel}[this.ableRelation[key]]
+							 console.log(value,this.ableRelation[key])
+							 if(Array.isArray(value)){
+								 this.${context.formModel}[this.ableRelation[key]] = []
+							 }else{
+								 this.${context.formModel}[this.ableRelation[key]] = undefined
+							 }
+						 }
+					 }
+				 }
+				for (let key in this.interfaceRes) {
+					if (key != faceMode) {
+						let faceReList = this.interfaceRes[key]
+						for (let i = 0; i < faceReList.length; i++) {
+							if (faceReList[i].relationField == model) {
+								let options = 'get' + key + 'Options';
+								if(this[options]){
+									this[options]()
+								}
+								this.changeData(key, index)
+							}
+						}
+					}
+				}
+			},
+			changeDataFormData(type, data, model,index,defaultValue ,edit) {
+				if(!edit) {
+					if (type == 2) {
+						for (let i = 0; i < this.${context.formModel}[data].length; i++) {
+							if (index == -1) {
+								this.${context.formModel}[data][i][model] = defaultValue
+							} else if (index == i) {
+								this.${context.formModel}[data][i][model] = defaultValue
+							}
+						}
+					} else {
+						this.${context.formModel}[data] = defaultValue
+					}
+				}
+			},
+			clickIcon(label,tipLabel) {
+				this.content = tipLabel
+				this.title = label
+				this.show = true
+			},
+        	exist() {
+				let title = [];
+				let _ruleList = this.ruleList
+				for (let k in _ruleList) {
+					let childData = this.${context.formModel}[k]
+					childData.forEach((item, index) => {
+						for (let model in _ruleList[k]) {
+							if (item[model] instanceof Array) {
+								if (item[model].length == 0) {
+									title.push(_ruleList[k][model])
+								}
+							} else if (!item[model] && item[model]!==0) {
+								title.push(_ruleList[k][model])
+							}
+						}
+					})
+				}
+				let _regList = this.regList
+				for (let k in _regList) {
+					let childData = this.${context.formModel}[k]
+					for(let n in _regList[k]){
+						for(let i=0;i<_regList[k][n].length;i++){
+							const element = _regList[k][n][i]
+							if (element.pattern) {
+								element.pattern = element.pattern.toString()
+								let start = element.pattern.indexOf('/')
+								let stop = element.pattern.lastIndexOf('/')
+								let str = element.pattern.substring(start + 1, stop)
+								let reg = new RegExp(str)
+								element.pattern = reg
+							}
+							childData.forEach((item, index) => {
+								if(item[n] && !element.pattern.test(item[n])){
+									title.push(element.message)
+								}
+							})
+						}
+					}
+				}
+				if (title.length > 0) {
+					return title[0]
+				}
+			},
+			resetForm(){
+				#if(${context.webType}=='1')
+				this.${context.formModel} = JSON.parse(JSON.stringify(this.dataValue))
+					#foreach($fieLdsModel in ${context.form})
+						#set($linzenkey = "${fieLdsModel.projectKey}")
+						#set($isEnd = "${fieLdsModel.isEnd}")
+						#set($formModel = ${fieLdsModel.formModel})
+						#set($model = "${formModel.model}")
+						#set($outermost = ${formModel.outermost})
+						#set($children = ${formModel.children})
+						#if($linzenkey=='tab' || $linzenkey=='collapse')
+							#if(${isEnd}=='0')
+								#if(${outermost}=='0')
+				this.${model}Current=${formModel.activeIndex}
+								#end
+							#end
+						#end
+					#end
+				#else
+				uni.navigateBack()
+				#end
+			},
+			dataAll(){
+			    #foreach($html in ${context.fields})
+			        #set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+			        #options($fieLdsModel,'')
+			    #end
+				#foreach($masetkey in $mastTableList.entrySet())
+					#set($fieldsAll = $masetkey.value)
+					#foreach($html in ${fieldsAll})
+						#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+						#options($fieLdsModel,'')
+					#end
+				#end
+			    #foreach($child in ${context.children})
+					#set($className = "${child.className}")
+			        #foreach($childList in ${child.childList})
+			            #set($fieLdsModel = $childList.fieLdsModel)
+						#options($fieLdsModel,$className)
+			        #end
+			    #end
+				this.collapse()
+			},
+			dateTime(timeRule, timeType, timeTarget, timeValueData, dataValue) {
+			  let timeDataValue = null;
+			  let timeValue = Number(timeValueData)
+			  if (timeRule) {
+				if (timeType == 1) {
+				  timeDataValue = timeValueData?timeValue:null
+				} else if (timeType == 2) {
+				  timeDataValue = dataValue
+				} else if (timeType == 3) {
+				  timeDataValue = new Date().getTime()
+				} else if (timeType == 4) {
+				  let previousDate = '';
+				  if (timeTarget == 1 || timeTarget == 2) {
+					previousDate = getDateDay(timeTarget, timeType, timeValue)
+					timeDataValue = new Date(previousDate).getTime()
+				  } else if (timeTarget == 3) {
+					previousDate = getBeforeData(timeValue)
+					timeDataValue = new Date(previousDate).getTime()
+				  } else {
+					timeDataValue = getBeforeTime(timeTarget, timeValue).getTime()
+				  }
+				} else if (timeType == 5) {
+				  let previousDate = '';
+				  if (timeTarget == 1 || timeTarget == 2) {
+					previousDate = getDateDay(timeTarget, timeType, timeValue)
+					timeDataValue = new Date(previousDate).getTime()
+				  } else if (timeTarget == 3) {
+					previousDate = getLaterData(timeValue)
+					timeDataValue = new Date(previousDate).getTime()
+				  } else {
+					timeDataValue = getLaterTime(timeTarget, timeValue).getTime()
+				  }
+				}
+			  }
+			  return timeDataValue;
+			},
+			time(timeRule, timeType, timeTarget, timeValue, formatType, dataValue) {
+			  let format = formatType == 'HH:mm' ? 'HH:mm:00' : formatType
+			  let timeDataValue = null
+			  if (timeRule) {
+				if (timeType == 1 && timeValue) {
+				  timeDataValue = timeValue || '00:00:00'
+				  if (timeDataValue.split(':').length == 3) {
+					timeDataValue = timeDataValue
+				  } else {
+					timeDataValue = timeDataValue + ':00'
+				  }
+				} else if (timeType == 2) {
+				  timeDataValue = dataValue
+				} else if (timeType == 3) {
+				  timeDataValue = this.linzen.toDate(new Date(), format)
+				} else if (timeType == 4) {
+				  let previousDate = '';
+				  previousDate = getBeforeTime(timeTarget, timeValue)
+				  timeDataValue = this.linzen.toDate(previousDate, format)
+				} else if (timeType == 5) {
+				  let previousDate = '';
+				  previousDate = getLaterTime(timeTarget, timeValue)
+				  timeDataValue = this.linzen.toDate(previousDate, format)
+				}
+			  }
+			  return timeDataValue;
+			},
+            #foreach($fields in ${context.fields})
+                #set($fieLdsModel = $fields.formColumnModel.fieLdsModel)
+				#optionsData($fieLdsModel,'')
+            #end
+			#foreach($masetkey in $mastTableList.entrySet())
+				#set($fieldsAll = $masetkey.value)
+				#foreach($fields in ${fieldsAll})
+					#set($fieLdsModel = $fields.formMastTableModel.mastTable.fieLdsModel)
+					#optionsData($fieLdsModel,'')
+				#end
+			#end
+            #foreach($child in ${context.children})
+				#set($className = "${child.className}")
+			${className}(){
+				let table = this.${context.formModel}.${className}List
+				let summaryField =${child.summaryField}
+				let summaryFieldName =${child.summaryFieldName}
+				#if($useFormPermission)
+				for(let i=0;i<summaryField.length;i++){
+					if(!this.${setPermission}.hasFormP("${tableModel}-"+summaryField[i],this.menuId)){
+						summaryField.splice(i)
+					}
+				}
+				#end
+				let data ={}
+				let thousandsField = ${child.thousandsField}
+				for (let i in summaryField) {
+					let map = {}
+					let val = 0
+					for (let j = 0; j < table.length; j++) {
+						let summary = table[j][summaryField[i]];
+						if (summary) {
+							let data = isNaN(summary) ? 0 :	Number(summary)
+							val += data
+						}
+					}
+					map.id = summaryField[i];
+					map.name = summaryFieldName[summaryField[i]];
+					map.val = (thousandsField.includes(summaryField[i]))? Number(val).toLocaleString('zh', {
+						maximumFractionDigits: '2',
+						minimumFractionDigits: '2'
+					}):  val.toFixed(2);
+					data[summaryField[i]]=map;
+				}
+				return data;
+			},
+                #foreach($childList in ${child.childList})
+					#set($className = "${child.className}")
+                    #set($fieLdsModel = $childList.fieLdsModel)
+					#optionsData($fieLdsModel,$className)
+                #end
+            #end
+			#foreach($fieLdsModel in ${context.form})
+				#set($linzenkey = "${fieLdsModel.projectKey}")
+				#set($isEnd = "${fieLdsModel.isEnd}")
+				#set($formModel = ${fieLdsModel.formModel})
+				#set($outermost = ${formModel.outermost})
+				#if($linzenkey=='tab')
+					#if(${isEnd}=='0')
+						#if(${outermost}=='0')
+			${formModel.model}(index) {
+				this.${formModel.model}Current = index;
+				this.collapse()
+				setTimeout(() => {
+					uni.$emit('initCollapse')
+				}, 50)
+			},
+						#end
+					#end
+				#end
+			#end
+            initData(){
+            	#set($nextTick='$'+"nextTick")
+				this.$nextTick(function(){
+					if (this.${context.formModel}.${pKeyName}) {
+						this.loading = true
+						request({
+							url: '/api/${context.module}/${context.className}/'+this.${context.formModel}.${pKeyName},
+							method: 'get',
+						}).then(res => {
+							this.dataInfo(res.data)
+							this.loading = false
+						})
+					}else {
+						this.initDefaultData()
+					}
+				})
+            },
+			beforeSubmit(){
+				const _data =this.dataList()
+				return _data
+			},
+		#if($isFlow==false)
+            submitForm(type){
+                var _data = this.dataList()
+                #set($refs = '$'+"refs")
+                this.${refs}.${context.formModel}.validate(valid => {
+                    if (!valid) return
+                    #set($ruls='$'+"u")
+                    if (!!this.exist()) return this.${ruls}.toast(
+						this.exist()
+					)
+                    this.btnLoading = true
+                    if (this.${context.formModel}.${pKeyName}) {
+                        request({
+                            url: '/api/${context.module}/${context.className}/' + this.${context.formModel}.${pKeyName},
+                            method: 'put',
+                            data: _data,
+                        }).then(res => {
+                            uni.showToast({
+                                title: res.msg,
+                                complete: () => {
+                                    setTimeout(() => {
+										if(type!=1){
+											uni.$emit('refresh')
+											uni.navigateBack()
+										}
+                                        this.btnLoading = false
+                                    }, 1500)
+                                }
+                            })
+                        }).catch(() => {
+							this.btnLoading = false
+						})
+                    }else {
+                        request({
+                            url: '/api/${context.module}/${context.className}',
+                            method: 'post',
+                            data: _data,
+                        }).then(res => {
+                            uni.showToast({
+                                title: res.msg,
+                                complete: () => {
+                                    setTimeout(() => {
+										if(type==1){
+											this.${context.formModel} = JSON.parse(JSON.stringify(this.dataValue))
+											this.initDefaultData()
+										}else{
+											uni.$emit('refresh')
+											uni.navigateBack()
+										}
+										this.btnLoading = false
+                                    }, 1500)
+                                }
+                            })
+                        }).catch(() => {
+							this.btnLoading = false
+						})
+                    }
+                });
+            },
+			#end
+			initDefaultData() {
+				#foreach($html in ${context.fields})
+					#set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+					#set($formModel='this.'+${context.formModel})
+					#formDefaultData('mast',$fieLdsModel,${formModel})
+				#end
+				#foreach($masetkey in $mastTableList.entrySet())
+					#set($fieldsAll = $masetkey.value)
+					#foreach($html in ${fieldsAll})
+						#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+						#set($formModel='this.'+${context.formModel})
+						#formDefaultData('mastTable',$fieLdsModel,${formModel})
+					#end
+				#end
+			},
+            selfInit() {
+				useBaseStore().updateRelationData({})
+				#if($isFlow)
+				this.dataAll()
+				this.initDefaultData()
+				this.collapse()
+				#end
+            },
+			selfGetInfo(dataForm){
+				this.${context.formModel}.id = this.${context.formModel}.${pKeyName}
+				this.dataInfo(dataForm)
+			},
+            #foreach($child in ${context.children})
+				#set($className = "${child.className}")
+            add${className}List(btnvalue){
+            	this.tableKey = '${className}List';
+            	let actionConfigMap ={
+					#foreach($footerList in ${child.footerBtnsList})
+						#set($btnvalue = "$footerList.value")
+						#set($btnlabel = "$footerList.label")
+						#set($btnshow = $footerList.show)
+						#set($btnType = "$footerList.btnType")
+						#set($btnIcon = "$footerList.btnIcon")
+						#set($actionConfig = "$footerList.actionConfig")
+						#if($btnvalue!='add' && $btnvalue!='batchRemove')
+					"$btnvalue":$actionConfig,
+						#end
+					#end
+				}
+				if(btnvalue == 'add'){
+					let value={
+						#foreach($childData in ${child.childList})
+							#set($fieLdsModel = ${childData.fieLdsModel})
+							#set($vModel = "${fieLdsModel.vModel}")
+							#set($config = ${fieLdsModel.config})
+							#set($dataType = "${config.dataType}")
+							#if($vModel)
+								#if($!config.valueType=='String')
+						$!{vModel} : '$!{config.defaultValue}',
+								#elseif($!config.valueType=='undefined')
+						$!{vModel} : undefined,
+								#else
+						$!{vModel} : $!{config.defaultValue},
+								#end
+								#if(${dataType}=='dictionary' || ${dataType}=='dynamic')
+						${vModel}Options:[],
+								#end
+							#end
+						#end
+					}
+					this.get${className}List(value)
+					this.childIndex = -1
+					this.collapse()
+				}else {
+					const data = {
+						actionConfig: actionConfigMap[btnvalue],
+						formData: this.${context.formModel}
+					}
+					uni.navigateTo({
+						url: '/pages/apply/tableLinkage/index?data=' + encodeURIComponent(JSON.stringify(data))
+					})
+				}
+            },
+            del${className}List(index,showConfirm=false) {
+                const handleRemove = ()=>{
+                    this.${context.formModel}.${className}List.splice(index, 1);
+                    this.collapse()
+                }
+                if(!showConfirm) return handleRemove()
+                uni.showModal({
+                    title: '提示',
+                    content: '确认删除该条信息吗？',
+                    success:  (res)=> {
+                        if (res.confirm) handleRemove()
+                    }
+                })
+            },
+            copy${className}List(index) {
+				this.tableKey = '${className}List';
+				let tableField = '$child.tableModel'
+				let result = {}
+				let item = {
+					#foreach($childData in ${child.childFieldList})
+						#set($fieLdsModel = ${childData.fieLdsModel})
+						#set($vModel = "${fieLdsModel.vModel}")
+						#set($config = ${fieLdsModel.config})
+						#set($dataType = "${config.dataType}")
+						#if($vModel)
+							#if($!config.valueType=='String')
+					$!{vModel} : '$!{config.defaultValue}',
+							#elseif($!config.valueType=='undefined')
+					$!{vModel} : undefined,
+							#else
+					$!{vModel} : $!{config.defaultValue},
+							#end
+							#if(${dataType}=='dictionary' || ${dataType}=='dynamic')
+					${vModel}Options:[],
+							#end
+						#end
+					#end
+				}
+				let data = JSON.parse(JSON.stringify(this.${context.formModel}.${className}List[index]))
+				for(let key in item){
+					result[key] = data[key]
+				}
+				this.${context.formModel}.${className}List.push(result)
+				this.collapse()
+            },
+			get${className}List(value){
+				let item = {
+					#foreach($childData in ${child.childFieldList})
+						#set($fieLdsModel = ${childData.fieLdsModel})
+						#set($vModel = "${fieLdsModel.vModel}")
+						#set($config = ${fieLdsModel.config})
+						#set($dataType = "${config.dataType}")
+						#if($vModel)
+							#if($!config.valueType=='String')
+					$!{vModel} : '$!{config.defaultValue}',
+							#elseif($!config.valueType=='undefined')
+					$!{vModel} : undefined,
+							#else
+					$!{vModel} : $!{config.defaultValue},
+							#end
+							#if(${dataType}=='dictionary' || ${dataType}=='dynamic')
+					${vModel}Options:[],
+							#end
+						#end
+					#end
+				}
+				let result = {...item,...value}
+				this.${context.formModel}.${className}List.push(result)
+				if(this.tableKey){
+					#foreach($childData in ${child.childList})
+						#set($fieLdsModel = ${childData.fieLdsModel})
+						#set($formModel='this.'+${context.formModel}+"."+${className}+"List[this."+${context.formModel}+"."+${className}+"List.length - 1]")
+						#formDefaultData('table',$fieLdsModel,${formModel})
+					#end
+				}
+				this.childIndex=this.${context.formModel}.${className}List.length-1
+				this.isEdit = true
+				#foreach($childList in ${child.childList})
+					#set($fieLdsModel = $childList.fieLdsModel)
+					#set($vModel = "${fieLdsModel.vModel}")
+					#set($field = "${fieLdsModel.vModel}")
+					#set($config = ${fieLdsModel.config})
+					#set($dataType = "${config.dataType}")
+					#if(${dataType}=='dynamic')
+				this.get${className}${vModel}Options()
+					#end
+				#end
+				this.isEdit = false
+				setTimeout(() => {
+					uni.$emit('initCollapse')
+				}, 50)
+			},
+            #end
+			dataList(){
+				var _data = this.${context.formModel};
+				return _data;
+			},
+			dataInfo(dataAll){
+				#foreach($child in ${context.children})
+					#set($className = "${child.className}")
+				let $className = JSON.parse(JSON.stringify(dataAll.${className}List))
+				dataAll.${className}List = []
+				#end
+				let _dataAll =dataAll
+				this.${context.formModel}=_dataAll
+				this.isEdit = true
+				this.dataAll()
+				this.isEdit = false
+				#foreach($child in ${context.children})
+					#set($className = "${child.className}")
+				for (let i = 0; i < ${className}.length; i++) {
+					this.get${className}List(${className}[i])
+				}
+				#end
+				this.childIndex=-1
+				this.collapse()
+				setTimeout(() => {
+					uni.$emit('initCollapse')
+				}, 50)
+			},
+			collapse(){
+				setTimeout(()=> {
+					#foreach($fieLdsModel in ${context.form})
+						#set($linzenkey = "${fieLdsModel.projectKey}")
+						#set($isEnd = "${fieLdsModel.isEnd}")
+						#set($formModel = ${fieLdsModel.formModel})
+						#set($outermost = ${formModel.outermost})
+						#set($config=$formModel.config)
+						#if($linzenkey=='collapse' || $linzenkey=='tab')
+							#if(${config.app}==true)
+								#if(${isEnd}=='0')
+									#if(${outermost}=='0')
+					this.$refs.${formModel.model}Current && this.$refs.${formModel.model}Current.init()
+									#end
+								#end
+							#end
+						#end
+					#end
+				}, 50);
+			},
+        },
+    }
+
+</script>
+<style>
+	page{
+		background-color: #f0f2f6;
+	}
+</style>

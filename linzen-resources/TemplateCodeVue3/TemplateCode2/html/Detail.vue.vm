@@ -1,0 +1,277 @@
+#parse("PublicMacro/DetailMarco.vm")
+#parse("PublicMacro/ConstantMarco.vm")
+##参数
+#ConstantParams()
+<template>
+##    全屏弹窗
+#if(${context.popupType}=="fullScreen")
+    <BasicPopup v-bind="$attrs" @register="registerPopup" :title="title" destroyOnClose>
+        <template #insertToolbar>
+            #if(${context.HasPrintBtn})
+                <a-button type="primary" @click="handlePrint">${context.PrintButton}</a-button>
+            #end
+        </template>
+        <a-row class="p-10px dynamic-form ${context.formStyle}" :style="{ margin: '0 auto', width: '${context.fullScreenWidth}' }">
+            <!-- 表单 -->
+            <a-form :colon="false" size="${context.size}" layout=#if(${context.labelPosition}=="top") "vertical" #else "horizontal" #end
+            labelAlign=#if(${context.labelPosition}=="right") "right" #else "left" #end
+            #if(${context.labelPosition}!="top") :labelCol="{ style: { width: '${context.labelWidth}px' } }" #end
+            :model="dataForm"  ref="formRef" >
+            <a-row :gutter="#if(${context.formStyle}=='word-form')0#else${context.gutter}#end">
+                <!-- 具体表单 -->
+                #DetailFormRendering()
+                <!-- 表单结束 -->
+            </a-row>
+            </a-form>
+        </a-row>
+    </BasicPopup>
+#end
+##    普通弹窗
+#if(${context.popupType}=="general")
+    <BasicModal v-bind="$attrs" @register="registerModal" :title="title" width="${context.generalWidth}"
+                :minHeight="100" :showOkBtn="false">
+        <template #insertFooter>
+            #if(${context.HasPrintBtn})
+                <a-button type="primary" @click="handlePrint">${context.PrintButton}</a-button>
+            #end
+        </template>
+        <!-- 表单 -->
+        <a-row class="dynamic-form ${context.formStyle}">
+            <a-form :colon="false" size="${context.size}" layout=#if(${context.labelPosition}=="top") "vertical" #else "horizontal" #end
+            labelAlign=#if(${context.labelPosition}=="right") "right" #else "left" #end
+                #if(${context.labelPosition}!="top") :labelCol="{ style: { width: '${context.labelWidth}px' } }" #end
+            :model="dataForm"  ref="formRef">
+            <a-row :gutter="#if(${context.formStyle}=='word-form')0#else${context.gutter}#end">
+                <!-- 具体表单 -->
+                #DetailFormRendering()
+                <!-- 表单结束 -->
+            </a-row>
+            </a-form>
+        </a-row>
+    </BasicModal>
+#end
+##    右侧弹窗
+#if(${context.popupType}=="drawer")
+    <BasicDrawer v-bind="$attrs" @register="registerDrawer" :title="title" width="${context.drawerWidth}" showFooter
+                 :showOkBtn="false">
+        <template #insertFooter>
+            #if(${context.HasPrintBtn})
+                <a-button type="primary" @click="handlePrint">${context.PrintButton}</a-button>
+            #end
+        </template>
+        <a-row class="p-10px dynamic-form ${context.formStyle}">
+            <!-- 表单 -->
+                <a-form :colon="false" size="${context.size}" layout=#if(${context.labelPosition}=="top") "vertical" #else "horizontal" #end
+            labelAlign=#if(${context.labelPosition}=="right") "right" #else "left" #end
+            #if(${context.labelPosition}!="top") :labelCol="{ style: { width: '${context.labelWidth}px' } }" #end
+            :model="dataForm"  ref="formRef" >
+            <a-row :gutter="#if(${context.formStyle}=='word-form')0#else${context.gutter}#end">
+                <!-- 具体表单 -->
+                #DetailFormRendering()
+                <!-- 表单结束 -->
+            </a-row>
+            </a-form>
+        </a-row>
+    </BasicDrawer>
+#end
+    <!-- 有关联表单详情：开始 -->
+    <RelationDetail ref="relationDetailRef" />
+    <!-- 有关联表单详情：结束 -->
+    #if(${context.HasPrintBtn})
+        <PrintSelect @register="registerPrintSelect" @change="handleShowBrowse" />
+        <PrintBrowse @register="registerPrintBrowse" />
+    #end
+</template>
+<script lang="ts" setup>
+    import { getDetailInfo } from './helper/api';
+    import { getConfigData } from '/@/api/onlineDev/visualDev';
+    import { reactive, toRefs, nextTick, ref, computed, unref ,toRaw} from 'vue';
+    #if(${context.popupType}=="fullScreen")
+    import { BasicPopup, usePopup } from '/@/components/Popup';
+    #end
+    import { BasicModal, useModal } from '/@/components/Modal';
+    #if(${context.popupType}=="drawer")
+    import { BasicDrawer, useDrawer } from '/@/components/Drawer';
+    #end
+    #if($childSummary == true)
+    import { thousandsFormat } from '/@/utils/linzen';
+    #end
+    // 有关联表单详情
+    import RelationDetail from '/@/views/common/dynamicModel/list/detail/index.vue';
+    // 表单权限
+    import { usePermission } from '/@/hooks/web/usePermission';
+    #if(${context.HasPrintBtn})
+    // 打印模板多条生成PrintSelect
+    import PrintSelect from '/@/components/PrintDesign/printSelect/index.vue';
+    import PrintBrowse from '/@/components/PrintDesign/printBrowse/index.vue';
+    #end
+    import { useMessage } from '/@/hooks/web/useMessage';
+
+    interface State {
+        dataForm: any;
+        title: string;
+        maskConfig: any;
+        locationScope: any;
+##  活动面板参数
+#foreach($fieLdsModel in ${context.form})
+#set($projectKey = "${fieLdsModel.projectKey}")
+#set($formModel = ${fieLdsModel.formModel})
+#set($outermost = ${formModel.outermost})
+#set($isEnd = "${fieLdsModel.isEnd}")
+#if(${isEnd}=='0')
+    #if($projectKey=='collapse')
+        #if(${outermost}=='0')
+            ${formModel.model}:any;
+        #end
+    #end
+    #if($projectKey=='tab')
+        #if(${outermost}=='0')
+            ${formModel.model}:any;
+        #end
+    #end
+#end
+#end
+    }
+
+    defineOptions({ name: 'Detail' });
+    const { createMessage, createConfirm } = useMessage();
+    #if(${context.popupType}=="fullScreen")
+    const [registerPopup, { openPopup, setPopupProps, closePopup }] = usePopup();
+    #end
+    #if(${context.popupType}=="general")
+    const [registerModal, { openModal, setModalProps, closeModal }] = useModal();
+    #end
+    #if(${context.popupType}=="drawer")
+    const [registerDrawer, { openDrawer, setDrawerProps, closeDrawer }] = useDrawer();
+    #end
+    #if(${context.HasPrintBtn})
+    const [registerPrintSelect, { openModal: openPrintSelect }] = useModal();
+    const [registerPrintBrowse, { openModal: openPrintBrowse }] = useModal();
+    #end
+    ##子表列表字段-及合计方法
+    #DetailChildTableColumns()
+
+    const relationDetailRef = ref<any>(null);
+    const state = reactive<State>({
+        dataForm:{},
+        title: '详情',
+        maskConfig:#CreateMaskConfig(),
+        locationScope:#CreateLocationScope(),
+##  活动面板参数
+#foreach($fieLdsModel in ${context.form})
+    #set($projectKey = "${fieLdsModel.projectKey}")
+    #set($formModel = ${fieLdsModel.formModel})
+    #set($outermost = ${formModel.outermost})
+    #set($isEnd = "${fieLdsModel.isEnd}")
+    #if(${isEnd}=='0')
+        #if($projectKey=='collapse')
+            #if(${outermost}=='0')
+        ${formModel.model}:${formModel.active},
+            #end
+        #end
+        #if($projectKey=='tab')
+            #if(${outermost}=='0')
+        ${formModel.model}:'${formModel.active}',
+            #end
+        #end
+    #end
+#end
+    });
+    const { title, dataForm, maskConfig } = toRefs(state);
+    // 表单权限
+    const { hasFormP } = usePermission();
+
+
+    defineExpose({ init });
+
+    function init(data) {
+        state.dataForm.id = data.id;
+        #if(${context.popupType}=="fullScreen")
+            openPopup();
+        #end
+        #if(${context.popupType}=="general")
+            openModal();
+        #end
+        #if(${context.popupType}=="drawer")
+            openDrawer();
+        #end
+        nextTick(() => {
+            setTimeout(initData, 0);
+        });
+    }
+    function initData() {
+        changeLoading(true);
+        #InitActiveValue()
+        if (state.dataForm.id) {
+            getData(state.dataForm.id);
+        } else {
+        #if(${context.popupType}=="fullScreen")
+            closePopup();
+        #end
+        #if(${context.popupType}=="general")
+            closeModal();
+        #end
+        #if(${context.popupType}=="drawer")
+            closeDrawer();
+        #end
+        }
+    }
+    function getData(id) {
+        getDetailInfo(id).then((res) => {
+            state.dataForm = res.data || {};
+            nextTick(() => {
+                changeLoading(false);
+            });
+        });
+    }
+
+    function toDetail(modelId, id) {
+        if (!id) return;
+        getConfigData(modelId).then((res) => {
+            if (!res.data || !res.data.formData) return;
+            const formConf = JSON.parse(res.data.formData);
+            formConf.popupType = 'general';
+            const data = { id, formConf, modelId };
+            relationDetailRef.value?.init(data);
+        });
+    }
+    #if($context.HasPrintBtn)
+    function handlePrint() {
+        let printId=#if(${context.PrintId})${context.PrintId}#else [] #end
+        if (!printId?.length) return createMessage.error('未配置打印模板');
+        if (printId?.length === 1) return  handleShowBrowse(printId[0]);
+        openPrintSelect(true, printId);
+    }
+    function handleShowBrowse(id) {
+        openPrintBrowse(true, { id,  formId: state.dataForm.id });
+    }
+    #end
+    function setFormProps(data) {
+    #if(${context.popupType}=="fullScreen")
+        setPopupProps(data);
+    #end
+    #if(${context.popupType}=="general")
+        setModalProps(data);
+    #end
+    #if(${context.popupType}=="drawer")
+        setDrawerProps(data);
+    #end
+    }
+    function changeLoading(loading) {
+        setFormProps({ loading });
+    }
+    ##合计方法
+    #if($childSummary==true)
+    //子表合计方法
+    function getCmpValOfRow(row, key, summaryField) {
+        if (!summaryField.length) return '';
+        const isSummary = key => summaryField.includes(key);
+        const target = row[key];
+        if (!target) return '';
+        let data = isNaN(target) ? 0 : Number(target);
+        if (isSummary(key)) return data || 0;
+        return '';
+    }
+    #end
+
+</script>

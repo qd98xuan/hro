@@ -1,0 +1,17 @@
+package ${package.Mapper};
+
+
+import ${package.Entity}.${table.entityName};
+import ${superMapperClassPackage};
+import com.linzen.base.mapper.SuperMapper;
+
+/**
+ * ${genInfo.description}
+ * 版本： ${genInfo.version}
+ * 版权： ${genInfo.copyright}
+ * 作者： ${genInfo.createUser}
+ * 日期： ${genInfo.createDate}
+ */
+public interface ${table.mapperName} extends SuperMapper<${table.entityName}>  {
+
+}

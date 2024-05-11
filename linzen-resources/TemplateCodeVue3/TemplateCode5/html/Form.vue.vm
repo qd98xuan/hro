@@ -1,0 +1,107 @@
+#parse("PublicMacro/FormMarco.vm")
+<template>
+    <div class="flow-form ${context.formStyle}">
+        <a-form :colon="false" size="${context.size}" layout=#if(${context.labelPosition}=="top") "vertical" #else "horizontal" #end
+            labelAlign=#if(${context.labelPosition}=="right") "right" #else "left" #end
+            :labelCol="{ style: { width: '${context.labelWidth}px' } }"
+            :model="dataForm" :rules="dataRule" ref="formRef" :disabled="config.disabled">
+        <a-row :gutter="#if(${context.formStyle}=='word-form')0#else${context.gutter}#end">
+            <!-- 具体表单 -->
+            #FormRendering()
+            <!-- 表单结束 -->
+        </a-row>
+        </a-form>
+    #if($isSelectDialog == true)
+        <SelectModal :config="state.currTableConf" :formData="state.dataForm" ref="selectModal" @select="addForSelect"/>
+    #end
+    </div>
+</template>
+
+<script lang="ts" setup>
+    import { reactive, toRefs, onMounted, ref , unref , computed, nextTick, toRaw, inject} from 'vue';
+    import { useFlowForm } from '/@/views/workFlow/workFlowForm/hooks/useFlowForm';
+    import type { FormInstance } from 'ant-design-vue';
+    import { LinzenRelationForm } from '/@/components/Linzen';
+    import { useMessage } from '/@/hooks/web/useMessage';
+    import { useUserStore } from '/@/store/modules/user';
+    #if($isSelectDialog == true)
+    import SelectModal from '/@/components/CommonModal/src/SelectModal.vue';
+    #end
+    import { thousandsFormat , getDateTimeUnit, getTimeUnit} from '/@/utils/linzen';
+    import { getDictionaryDataSelector } from '/@/api/systemData/dictionary';
+    import { getDataInterfaceRes } from '/@/api/systemData/dataInterface';
+    import dayjs from 'dayjs';
+    import { cloneDeep } from 'lodash-es';
+
+    interface State {
+        #createStateParam("any")
+    }
+    const userStore = useUserStore();
+    const userInfo = userStore.getUserInfo;
+    const props = defineProps(['config']);
+    const emit = defineEmits(['setPageLoad', 'eventReceiver']);
+    const getLeftTreeActiveInfo: (() => any) | null = inject('getLeftTreeActiveInfo', null);
+    const formRef = ref<FormInstance>();
+    const state = reactive<State>({
+        #createStateParam()
+    });
+
+    const { createMessage, createConfirm } = useMessage();
+    const { dataForm, dataRule, optionsObj, ableAll, maskConfig } = toRefs(state);
+    const { init, judgeShow, judgeWrite,judgeRequired, dataFormSubmit } = useFlowForm({
+        config: props.config,
+        selfState: state,
+        emit,
+        formRef,
+        selfInit,
+        selfGetInfo,
+    });
+
+    defineExpose({ dataFormSubmit });
+##新增初始化数据
+    function selfInit() {
+        #EditGetOption(false)
+        #InitActiveValue()
+        state.childIndex = -1;
+        if (getLeftTreeActiveInfo) state.dataForm = {...state.dataForm, ...(getLeftTreeActiveInfo() || {}) };
+    }
+##编辑和详情初始化数据
+    function selfGetInfo(dataForm) {
+        #EditGetOption(true)
+        #InitActiveValue()
+    }
+    onMounted(() => {
+        init();
+    });
+
+    #if($isSelectDialog == true)
+    // 子表弹窗数据
+    const selectModal = ref(null);
+    #end
+    #GetChildTableColumns()
+    ##数据联动changeData方法
+    #ChangeData()
+    ##子表其他方法
+    #CreateChildTableMethod()
+    ##子表弹窗数据方法
+    #if($isSelectDialog == true)
+    #ChildDialogMethod()
+    #end
+    ##合计方法
+    #if($childSummary==true)
+    //子表合计方法
+    function getCmpValOfRow(row, key, summaryField) {
+        if (!summaryField.length) return '';
+        const isSummary = key => summaryField.includes(key);
+        const target = row[key];
+        if (!target) return '';
+        let data = isNaN(target) ? 0 : Number(target);
+        if (isSummary(key)) return data || 0;
+        return '';
+    }
+    #end
+##数据选项--数据字典和远端数据初始化方法
+    #GetDataOptionsMethod()
+##动态时间处理
+    #GetRelationDate()
+</script>

@@ -1,0 +1,55 @@
+#set($name = "${context.className.substring(0,1).toUpperCase()}${context.className.substring(1)}")
+package ${context.package}.model.$!{name.toLowerCase()};
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import com.linzen.base.Pagination;
+import java.util.List;
+
+/**
+ *
+ * ${context.genInfo.description}
+ * @版本： ${context.genInfo.version}
+ * @版权： ${context.genInfo.copyright}
+ * @作者： ${context.genInfo.createUser}
+ * @日期： ${context.genInfo.createDate}
+ */
+@Data
+public class $!{name}Pagination extends Pagination {
+    /** 关键词搜索 */
+    private String projectKeyword;
+    /** 查询key */
+	private String[] selectKey;
+    /** 选中数据数组id */
+    private String[] selectIds;
+    /** json */
+	private String json;
+    /** 数据类型 0-当前页，1-全部数据 */
+	private String dataType;
+    /** 高级查询 */
+	private String superQueryJson;
+    /** 功能id */
+    private String moduleId;
+    /** 菜单id */
+    private String menuId;
+#foreach($search in ${context.searchListAll})
+    #set($jsonKey =${search.id})
+    #set($id =${search.id})
+    #set($lowModel = "${id.substring(0,1).toLowerCase()}${id.substring(1)}")
+    #set($upModel = "${id.substring(0,1).toUpperCase()}${id.substring(1)}")
+    #set($label = ${search.label})
+    /** ${label} */
+    @JsonProperty("$jsonKey")
+    private Object ${lowModel};
+#end
+#if(${context.treeTable} == true)
+    /**
+    * 树形异步父级字段传值
+    */
+    private String treeParentValue;
+    /**
+    * 是否有参数
+    */
+    private  boolean hasParam=false;
+#end
+}

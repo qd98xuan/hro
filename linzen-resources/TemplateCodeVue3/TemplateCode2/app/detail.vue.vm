@@ -1,0 +1,706 @@
+#set($pKeyName = "${context.pKeyName}")
+#set($mastTableList = $context.mastTable)
+#set($setPermission = "$setPermission")
+#set($menuId = "menuId")
+#set($useBtnPermission=${context.useBtnPermission})
+#set($useFormPermission=${context.useFormPermission})
+#set($isFlow=${context.isFlow})
+#macro(code6 $key $html $formModel $showModel $tableFieldModel)
+	#set($model = "${html.vModel}")
+	#set($slot = ${html.slot})
+	#set($prop="${html.vModel}")
+	#set($config = $html.config)
+	#set($show = ${config.noShow})
+	#set($vmodel="${formModel}.${model}")
+	#set($labelSuffix="${context.labelSuffix}")
+	#set($linzenkey="${config.projectKey}")
+	#set($tag="view")
+	#set($list="${model}")
+	#set($maskConfig = "maskConfig.${model}")
+	#set($type=${html.type})
+	#set($showJudge= "")
+	#set($inputalign="")
+	#set($isStorage="${html.isStorage}")
+	#set($hasFormP="#if($tableFieldModel)${tableFieldModel}-#end${model}")
+	#set($relationField="")
+	#set($relationModel = "")
+	#set($roleOrgroup = "")
+	#set($permission = "${useFormPermission}")
+	#set($childoptions="")
+	#set($ableRelationIds="")
+	#if($linzenkey=='userSelect' && ${html.relationField})
+		#set($ableRelationIds="${context.formModel}.${html.relationField}")
+	#end
+	#set($configLabel="${config.label}")
+	#if($linzenkey=='roleSelect' || $linzenkey=='groupSelect')
+		#set($roleOrgroup = "vModel='"+${prop}+"'")
+	#end
+	#if($linzenkey=='relationForm' || $linzenkey=='popupSelect'|| $linzenkey=='popupTableSelect')
+		#set($relationField = "relationField='"+${html.relationField}+"'")
+		#set($relationModel = "vModel='"+${prop}+"'")
+	#end
+	#if($linzenkey=='popupAttr' || $linzenkey=='relationFormAttr')
+		#set($relationField = "relationField='"+${html.relationField}+"'")
+		#set($showList = "")
+		#set($showJudge = "")
+		#set($permission = "${useFormPermission}")
+		#if($isStorage=='0')
+			#set($hasFormP="#if($tableFieldModel)${tableFieldModel}-#end${html.relationField}")
+			#set($model = "${html.relationField}")
+			#set($vmodel="${formModel}.${html.relationField}_${html.showField}")
+		#end
+	#end
+	#if($key=='table')
+		#set($labelSuffix="")
+		#set($prop="")
+		#set($childoptions="${showModel}")
+		#if($linzenkey=='relationForm' || $linzenkey=='popupSelect'|| $linzenkey=='popupTableSelect')
+			#set($relationModel = ":vModel=""'"+${model}+"'+i""")
+		#end
+		#if($linzenkey=='popupAttr' || $linzenkey=='relationFormAttr')
+			#set($relationField = ":relationField=""'"+${html.relationField}+"'+i""")
+			#set($showList = "")
+			#set($permission = "${useFormPermission}")
+			#if($isStorage=='0')
+				#set($hasFormP="#if($tableFieldModel)${tableFieldModel}-#end${html.relationField}")
+				#set($model = "${html.relationField}")
+				#set($vmodel="${formModel}.${html.relationField}_${html.showField}")
+			#end
+		#end
+		#if($linzenkey=='userSelect' && ${html.relationField})
+			#set($ableRelationIds="${context.formModel}.${showModel}List[i].${html.relationField}")
+		#end
+		#set($maskConfig = "maskConfig.${showModel}${model}")
+	#end
+	#if($linzenkey=='input' || $linzenkey=='textarea' || $linzenkey=='modifyUser' || $linzenkey=='modifyTime' || $linzenkey=='billRule')
+		#set($inputalign="right")
+	#end
+	#if($linzenkey=='inputNumber')
+		#set($tag = "linzen-number-box")
+	#elseif($linzenkey=='slider')
+		#set($tag = "linzen-slider")
+	#elseif($linzenkey=='input')
+		#set($tag = "linzen-input")
+	#elseif($linzenkey=='rate')
+		#set($tag = "linzen-rate")
+	#elseif($linzenkey=='editor')
+		#set($configLabel="")
+		#set($tag = "linzen-editor")
+	#elseif($linzenkey=='uploadImg')
+		#set($tag = "linzen-upload")
+	#elseif($linzenkey=='uploadFile')
+		#set($tag = "linzen-file")
+	#elseif($linzenkey=='sign')
+		#set($tag = "linzen-sign")
+	#elseif($linzenkey=='location')
+		#set($tag = "linzen-location")
+	#elseif($linzenkey=='colorPicker')
+		#set($tag = "linzen-colorPicker")
+	#end
+	#if($config.tag && $tag!='view')
+		#set($tag = $config.tag)
+	#end
+	#set($end ="/"+ ${tag})
+	#if($show == false && ${config.app}==true)
+		#if($tag)
+		<view class="u-p-l-20 u-p-r-20 form-item-box">
+		<u-form-item #if($permission) #if($useFormPermission==true) v-if="${setPermission}.hasFormP('${hasFormP}',menuId)"#end#end
+			#if($config.showLabel && $config.showLabel == true)
+				#if($configLabel) label="${configLabel}${labelSuffix}"#end
+				#if($config.tipLabel && $linzenkey!='editor' && $configLabel) left-icon="question-circle-fill" @clickIcon="clickIcon('${configLabel}','${config.tipLabel}')" :left-icon-style="{'color':'#a0acb7'}" #end
+				#if($showJudge) ${showJudge}#end
+				#if($config.labelWidth) label-width="${config.labelWidth}"#end #else label-width="0"#end>
+				<${tag}
+				#set($classText="linzen-detail-text")
+				#if($linzenkey=='editor')
+					#set($classText="editor-box")
+				#end
+				class = "${classText}"
+				#if($html.count) :max="${html.count}"#end
+				#if($html.max) :max="${html.max}"#end
+				#set($showModelDisabledList=['rate','slider',"colorPicker"])
+				#set($showModelList=['rate','slider','uploadFile','inputNumber',"uploadImg","editor","colorPicker","sign","input","location"])
+				#if(${showModelList.contains($linzenkey)}) v-model="${vmodel}"
+					#if(${showModelDisabledList.contains($linzenkey)}) disabled #else detailed #end
+					#if(${maskConfig}) :maskConfig="${maskConfig}"  #end
+				#end
+				#if($linzenkey=='editor') :html="${vmodel}" #end
+				#if($linzenkey=='relationForm') @click.native="toDetail(${vmodel}_id,'${html.modelId}')" style="color:blue"#end
+				#if($slot.prepend) prepend="${slot.prepend}" #end
+				#if($slot.append) append="${slot.append}" #end
+				#if($html.allowhalf) allow-half #end
+				#if($ableRelationIds) :ableRelationIds = "${ableRelationIds}" #end
+				#if($html.isStorage || $html.isStorage=='0') isStorage="${html.isStorage}" #end
+				#if($inputalign) input-align='right' #end
+				#if($html.prefixIcon) prefix-icon="${html.prefixIcon}" #end
+				#if($html.suffixIcon) suffix-icon="${html.suffixIcon}" #end
+				#if($html.selectType) selectType="${html.selectType}" #end
+				#if($html.description) description="${html.description}" #end
+				#if($html.closeText) closeText="${html.closeText}" #end
+				#if($html.direction) direction="${html.direction}" #end
+				#if($html.isAmountChinese) isAmountChinese #end
+				#if($html.thousands) thousands #end
+				#if($html.useMask) useMask #end
+				#if($html.enableLocationScope) enableLocationScope #end
+				#if($html.addonAfter) addonAfter="${html.addonAfter}" #end
+				#if($html.addonBefore) addonBefore="${html.addonBefore}" #end
+				#if($html.controls) :controls="${html.controls}" #end
+				#if($html.hasPage) hasPage #end
+				#if($html.filterable || $html.filterable=='false') :showSearch='${html.filterable}' #end
+				#if($html.propsValue) propsValue="${html.propsValue}" #end
+				#if($html.popupWidth) popupWidth="${html.popupWidth}" #end
+				#if($html.popupTitle) popupTitle="${html.popupTitle}" #end
+				#if($html.popupType) popupType="${html.popupType}" #end
+				#if($relationField) ${relationField} #end
+				#if($relationModel) ${relationModel} #end
+				#if($roleOrgroup) ${roleOrgroup} #end
+				#if($html.showField) showField="${html.showField}" #end
+				#if($html.modelId) modelId="${html.modelId}" #end
+				#if($html.interfaceId) interfaceId="${html.interfaceId}" #end
+				#if($html.pageSize) :pageSize="${html.pageSize}" #end
+				#if($html.accept) accept="${html.accept}" #end
+                #if($html.folder) folder="${html.folder}" #end
+				#if($html.multiple) :multiple="${html.multiple}"#end
+				#if($html.maxlength) :maxlength="${html.maxlength}"#end
+				#if($html.min) :min="${html.min}"#end
+				#if($html.level || ${html.level}==0) :level="${html.level}" #end
+				#if($type) type="${type}"#end
+				#if($html.step) :step="${html.step}"#end
+				#if($html.textStyle) :textStyle='${html.textStyle}'#end
+				#if($html.readonly) readonly#end
+				#if($html.contentPosition) contentPosition="${html.contentPosition}"#end>
+				#if($model &&  !${showModelList.contains($linzenkey)})
+					{{${vmodel}}}
+				#end
+			</${tag}>
+		</u-form-item>
+		</view>
+		#end
+	#end
+#end
+<template>
+    <view class="linzen-wrap linzen-wrap-form" v-if="!loading">
+        <u-form :model="${context.formModel}" :rules="${context.formRules}" ref="${context.formModel}" :errorType="['toast']"
+				#set($position='left')
+				#if(${context.labelPosition}=='top')
+					#set($position='top')
+				#end
+				#set($align='left')
+				#if(${context.labelPosition}=='right')
+					#set($align='right')
+				#end
+                label-position="${position}" label-align="${align}" :label-width="labelwidth" class="linzen-form">
+            #foreach($fieLdsModel in ${context.form})
+                #set($linzenkey = "${fieLdsModel.projectKey}")
+                #set($isEnd = "${fieLdsModel.isEnd}")
+				#set($formModel = ${fieLdsModel.formModel})
+				#set($config=$formModel.config)
+				#set($span=$config.span)
+				#set($outermost = ${formModel.outermost})
+				#set($header = ${formModel.header})
+                #if($linzenkey=='card' || $linzenkey=='row')
+					#if(${config.app}==true)
+                    #if(${isEnd}=='0')
+            <view class="linzen-card">
+						#if($header)
+			<view class="linzen-card-cap u-line-1">${header}#if(${config.tipLabel})<u-icon name="question-circle-fill" class="u-m-l-10" color="#a0acb7" @click="clickIcon('${header}','${config.tipLabel}')"/>#end</view>
+						#end
+					#else
+			</view>
+					#end
+					#end
+				#elseif($linzenkey=='tab')
+					#set($tabModel = ${formModel.model})
+					#set($tabNum = ${formModel.childNum})
+					#if(${config.app}==true)
+					#if(${isEnd}=='0')
+						#if(${outermost}=='0')
+			<view prop="${formModel.model}">
+			<u-tabs ref="${formModel.model}Current" :is-scroll="false" :list="${tabModel}Data" name="title" v-model="${tabModel}Current" @change="${tabModel}"/>
+			<view>
+						#else
+			<view v-show="${tabNum} == ${tabModel}Current">
+						#end
+					#else
+						#if(${outermost}=='0')
+			</view>
+			</view>
+						#else
+			</view>
+						#end
+					#end
+					#end
+				#elseif($linzenkey=='collapse')
+					#set($collapse = "u-collapse")
+					#set($tabNum = ${formModel.childNum})
+					#if(${outermost}=='1')
+						#set($collapse = "u-collapse-item")
+					#end
+					#if(${config.app}==true)
+						#if(${isEnd}=='0')
+							#if(${outermost}=='0')
+								<${collapse} ref="${formModel.model}Current" :accordion="${formModel.accordion}" v-model="${formModel.model}Current">
+							#else
+								<${collapse} title="${formModel.title}" @change="onCollapseChange" :open="${formModel.model}active.indexOf('${formModel.name}')>-1" name="${formModel.name}" class="collapse-item">
+							#end
+						#else
+						</${collapse}>
+						#end
+					#end
+				#elseif($linzenkey=="groupTitle" || $linzenkey=="divider" || $linzenkey=='text' || $linzenkey=='button' || $linzenkey=='link' || $linzenkey=='alert')
+					#set($defaultName="")
+					#set($tag="")
+					#set($divider ="")
+					#set($itemBox = "form-item-box")
+					#if($linzenkey=="groupTitle")
+						#set($tag = "linzen-group")
+						#set($itemBox="")
+					#elseif($linzenkey=="divider")
+						#set($divider ="half-width=""200"" height=""80""")
+						#set($tag = "u-"+$linzenkey)
+						#set($defaultName=$formModel.content)
+					#elseif($linzenkey=='text')
+						#set($tag= "linzen-text")
+					#elseif($linzenkey=="button")
+						#set($tag= "linzen-button")
+					#elseif($linzenkey=="link")
+						#set($tag= "linzen-link")
+					#elseif($linzenkey=="alert")
+						#set($tag= "linzen-alert-tips")
+					#end
+					#set($tag=${config.tag})
+					#if(${config.app}==true)
+			<view class="u-p-l-20 u-p-r-20 ${itemBox}">
+						#if(${itemBox})
+			<u-form-item>
+						#end
+				<${tag}
+				#if($formModel.title || $formModel.title=='') title='${formModel.title}'#end
+				#if($formModel.tagIcon) tagIcon='${formModel.tagIcon}'#end
+				#if($formModel.showIcon) showIcon #end
+				#if($formModel.closable) closable #end
+				#if($formModel.target) target='${formModel.target}'#end
+				#if($formModel.href) href='${formModel.href}'#end
+				#if($formModel.buttonText) buttonText='${formModel.buttonText}'#end
+				#if($formModel.align) align='${formModel.align}'#end
+				#if($formModel.type) type='${formModel.type}'#end
+				#if($formModel.textStyle) :textStyle='${formModel.textStyle}'#end
+				#if($config.defaultValue) value="${config.defaultValue}"#end
+				#if($formModel.helpMessage && ${formModel.content}) tipLabel="${formModel.helpMessage}" @groupIcon="clickIcon(`${formModel.content}`,`${formModel.helpMessage}`)" #end
+				#if($divider) ${divider}#end
+				#if($formModel.helpMessage) helpMessage ="${formModel.helpMessage}" #end
+				#if($formModel.content) value="${formModel.content}" content="${formModel.content}"#end
+				#if($formModel.contentPosition) contentPosition="${formModel.contentPosition}" #end>
+					#if(${defaultName})
+					$!{defaultName}
+					#end
+				</${tag}>
+						#if(${itemBox})
+			</u-form-item>
+						#end
+			</view>
+					#end
+				#elseif($linzenkey=='mastTable')
+					#set($mastTableModel = $fieLdsModel.formMastTableModel)
+					#set($html = $mastTableModel.mastTable.fieLdsModel)
+					#set($formModel="${context.formModel}")
+					#set($showModel="")
+					#set($tableFieldModel="")
+					#code6('mastTable' $html $formModel $showModel $tableFieldModel)
+				#elseif($linzenkey=='mast')
+                    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+					#set($formModel = "${context.formModel}")
+					#set($showModel="")
+					#set($tableFieldModel="")
+					#code6('mast' $html $formModel $showModel $tableFieldModel)
+			    #elseif($linzenkey=='table')
+                    #set($child = $fieLdsModel.childList)
+					#set($tableModel = ${child.tableModel})
+					#set($tableFieldModel="${tableModel}")
+					#set($childApp=$child.app)
+                    #set($className = "")
+                    #foreach($children in ${context.children})
+                        #if(${children.tableModel}==${child.tableModel})
+                            #set($className = "${children.className}")
+                        #end
+                    #end
+					#set($showJudge= "")
+					#set($showTableWrite="")
+					#if($childApp == true)
+			<view class="linzen-table"#if(${showJudge}) $showJudge#end #if($useFormPermission==true) v-if="${setPermission}.hasFormP('${tableModel}',menuId)"#end>
+				<view class="linzen-table-title u-line-1">
+                    ${child.label}
+                    #if(${child.tipLabel})
+                    <u-icon name="question-circle-fill" class="u-m-l-10" color="#a0acb7" @click="clickIcon('${child.label}','${child.tipLabel}')"/>
+                    #end
+                </view>
+                <view class="linzen-table-item" v-for="(item,i) in ${context.formModel}.${tableFieldModel}" :key="i">
+                    <view class="linzen-table-item-title">
+                        <view class="linzen-table-item-title-num">({{i+1}})</view>
+                    </view>
+				#foreach($childListAll in ${child.childList})
+					#set($html = $childListAll.fieLdsModel)
+					#set($formModel="${context.formModel}.${tableFieldModel}[i]")
+					#set($showModel="${className}")
+					#code6('table' $html $formModel $showModel $tableFieldModel)
+				#end
+				</view>
+			#set($showSummary = $child.showSummary)
+			#if($showSummary)
+				<view class="linzen-table-item" v-if="${className}()">
+					<view class="linzen-table-item-title u-flex u-row-between">
+						<text class="linzen-table-item-title-num">${child.label}合计</text>
+					</view>
+					<view class="u-p-l-20 u-p-r-20 form-item-box">
+					<u-form-item v-for="(item,i) in ${className}()" :key="i" :label="item.name">
+						<LinzenInput v-model="item.val" disabled placeholder="" />
+					</u-form-item>
+					</view>
+				</view>
+			#end
+            </view>
+                	#end
+                #end
+            #end
+        </u-form>
+        <view class="buttom-actions" >
+            <u-button class="buttom-btn" @click="resetForm">取消</u-button>
+            <u-button class="buttom-btn" type="primary" @click.stop="submitForm"  v-if="btnList.includes('btn_edit')">编辑</u-button>
+        </view>
+		<u-modal v-model="show" :content="content" width='70%' border-radius="16" :content-style="{fontSize: '28rpx',padding: '20rpx',lineHeight: '44rpx',textAlign: 'left'}"
+		 	:titleStyle="{padding: '20rpx'}" :confirm-style="{height: '80rpx',lineHeight: '80rpx'}" :title="title" confirm-text="确定">
+			<view class="slot-content">
+				<rich-text :nodes="content"></rich-text>
+			</view>
+		</u-modal>
+    </view>
+</template>
+##  单行输入
+#macro(maskConfig $fieLdsModel,$childList)
+	#set($html = $fieLdsModel)
+	#set($vModel = "${childList}${html.vModel}")
+	#if(${vModel})
+		${vModel}:{
+		#set($config = ${html.maskConfig})
+		#if($config)
+		filler:"${config.filler}",
+		maskType:${config.maskType},
+		prefixType:${config.prefixType},
+		prefixLimit:${config.prefixLimit},
+		prefixSpecifyChar:"${config.prefixSpecifyChar}",
+		suffixType:${config.suffixType},
+		suffixLimit:${config.suffixLimit},
+		suffixSpecifyChar:"${config.suffixSpecifyChar}",
+		ignoreChar:"${config.ignoreChar}",
+		useUnrealMask:${config.useUnrealMask},
+		unrealMaskLength:${config.unrealMaskLength},
+		#end
+	},
+	#end
+#end
+
+<script>
+    import {
+        getDictionaryDataSelector,
+		getDataInterfaceRes
+    } from '@/api/common'
+    import request from '@/utils/request'
+    export default {
+        data(){
+            return{
+                btnLoading: false,
+				loading: false,
+                text: '提示：测试文本',
+                tableKey:'',
+				${context.formModel}:{
+					${pKeyName}:"",
+				},
+				${context.formRules}:{},
+				#foreach($fieLdsModel in ${context.form})
+					#set($linzenkey = "${fieLdsModel.projectKey}")
+					#set($isEnd = "${fieLdsModel.isEnd}")
+					#set($formModel = ${fieLdsModel.formModel})
+					#set($model = "${formModel.model}")
+					#set($outermost = ${formModel.outermost})
+					#set($children = ${formModel.children})
+					#if($linzenkey=='tab' || $linzenkey=='collapse')
+						#if(${isEnd}=='0')
+							#if(${outermost}=='0')
+								#if($linzenkey=='collapse')
+				${model}active: #if($formModel.accordion) '${formModel.active}' #else ${formModel.active}  #end,
+								#end
+				${model}Current:${formModel.activeIndex},
+				${model}Data:[
+								#foreach($childrenList in $children)
+					{
+						title: "${childrenList.title}"
+					},
+								#end
+				],
+							#end
+						#end
+					#end
+				#end
+				maskConfig:{
+					#foreach($html in ${context.fields})
+						#set($fieLdsModel = $html.formColumnModel.fieLdsModel)
+						#maskConfig($fieLdsModel,'')
+					#end
+					#foreach($masetkey in $mastTableList.entrySet())
+						#set($fieldsAll = $masetkey.value)
+						#foreach($html in ${fieldsAll})
+							#set($fieLdsModel = $html.formMastTableModel.mastTable.fieLdsModel)
+							#maskConfig($fieLdsModel,'')
+						#end
+					#end
+					#foreach($child in ${context.children})
+						#set($className = "${child.className}")
+						#foreach($childList in ${child.childList})
+							#set($fieLdsModel = $childList.fieLdsModel)
+							#maskConfig($fieLdsModel,$className)
+						#end
+					#end
+				},
+                labelwidth:${context.labelWidth}*1.5,
+                menuId:'',
+				btnList:[],
+				idList:[],
+                ruleList:{},
+				childIndex:-1,
+				content:'',
+				title:'',
+				show:false,
+            }
+        },
+        onLoad(option) {
+        	this.menuId=option.menuId
+        	this.btnList=option.btnList.split(",")
+			uni.setNavigationBarTitle({
+				title: '详情'
+			})
+            this.${context.formModel}.${pKeyName} = option.id || 0
+			this.idList = option.idList?option.idList.split(","):[]
+            this.initData()
+			uni.$on('refresh', () => {
+				#foreach($fieLdsModel in ${context.form})
+					#set($linzenkey = "${fieLdsModel.projectKey}")
+					#set($isEnd = "${fieLdsModel.isEnd}")
+					#set($formModel = ${fieLdsModel.formModel})
+					#set($model = "${formModel.model}")
+					#set($outermost = ${formModel.outermost})
+					#set($children = ${formModel.children})
+					#if($linzenkey=='tab' || $linzenkey=='collapse')
+						#if(${isEnd}=='0')
+							#if(${outermost}=='0')
+								#if($linzenkey=='collapse')
+				this.${model}active=#if($formModel.accordion) '${formModel.active}' #else ${formModel.active}  #end
+								#end
+				this.${model}Current=${formModel.activeIndex}
+							#end
+						#end
+					#end
+				#end
+				//执行接口更新数据
+				this.initData()
+			})
+			uni.$on('initCollapse', () => {
+				//初始化折叠面板高度高度
+				this.collapse()
+			})
+        },
+		beforeDestroy() {
+			uni.$off('refresh')
+		},
+        onReady() {
+            #set($rulesAll = "this."+${context.formRules})
+            this.$refs.${context.formModel}.setRules(${rulesAll});
+        },
+        watch:{
+        	dataForm: {
+				handler(val, oldVal) {
+				#foreach($child in ${context.children})
+					#set($className = "${child.className}")
+					this.${className}()
+				#end
+				},
+				deep: true
+			}
+        },
+        methods:{
+			doPreviewImage(url,imagesList) {
+				const images = imagesList.map(item => this.define.baseURL + item.url);
+				uni.previewImage({
+					urls: images,
+					current: url,
+					success: () => {},
+					fail: () => {
+						uni.showToast({
+							title: '预览图片失败',
+							icon: 'none'
+						});
+					}
+				});
+			},
+			onCollapseChange() {
+				uni.$emit('initCollapse')
+			},
+			toDetail(id, modelId) {
+				if (!id) return
+				let config = {
+					modelId: modelId,
+					id: id,
+					formTitle: '详情',
+					noShowBtn: 1
+				}
+				this.$nextTick(() => {
+					const url ='/pages/apply/dynamicModel/detail?config=' + this.linzen.base64.encode(JSON.stringify(config),"UTF-8")
+					uni.navigateTo({
+						url: url
+					})
+				})
+			},
+			clickIcon(label,tipLabel) {
+				this.content = tipLabel
+				this.title = label
+				this.show = true
+			},
+        	checkChildRule() {
+				let title = [];
+				let _ruleList = this.ruleList
+				for (let k in _ruleList) {
+					let childData = this.${context.formModel}[k]
+					childData.forEach((item, index) => {
+						for (let model in _ruleList[k]) {
+							if (item[model] instanceof Array) {
+								if (item[model].length == 0) {
+									title.push(_ruleList[k][model])
+								}
+							} else if (!item[model]) {
+								title.push(_ruleList[k][model])
+							}
+						}
+					})
+				}
+				if (title.length > 0) {
+					return title[0]
+				}
+			},
+			resetForm(){
+				uni.navigateBack()
+			},
+			dataAll(){
+			},
+            #foreach($child in ${context.children})
+				#set($tableModel = "${child.tableModel}")
+				#set($className = "${child.className}")
+			${className}(){
+				let table = this.${context.formModel}.${tableModel}
+				let summaryField =${child.summaryField}
+				let summaryFieldName =${child.summaryFieldName}
+				#if($useFormPermission)
+				for(let i=0;i<summaryField.length;i++){
+					if(!this.${setPermission}.hasFormP("${tableModel}-"+summaryField[i],this.menuId)){
+						summaryField.splice(i)
+					}
+				}
+				#end
+				let data ={}
+				if(!table) return data
+				let thousandsField = ${child.thousandsField}
+				for (let i in summaryField) {
+					let map = {}
+					let val = 0
+					for (let j = 0; j < table.length; j++) {
+						let summary = table[j][summaryField[i]];
+						if (summary) {
+							let data = isNaN(summary) ? 0 :	Number(summary)
+							val += data
+						}
+					}
+					map.id = summaryField[i];
+					map.name = summaryFieldName[summaryField[i]];
+					map.val = (thousandsField.includes(summaryField[i]))? Number(val).toLocaleString('zh', {
+						maximumFractionDigits: '2',
+						minimumFractionDigits: '2'
+					}):  val.toFixed(2);
+					data[summaryField[i]]=map;
+				}
+				return data;
+			},
+            #end
+			#foreach($fieLdsModel in ${context.form})
+				#set($linzenkey = "${fieLdsModel.projectKey}")
+				#set($isEnd = "${fieLdsModel.isEnd}")
+				#set($formModel = ${fieLdsModel.formModel})
+				#set($outermost = ${formModel.outermost})
+				#if($linzenkey=='tab')
+					#if(${isEnd}=='0')
+						#if(${outermost}=='0')
+			${formModel.model}(index) {
+				this.${formModel.model}Current = index;
+				this.collapse()
+				setTimeout(() => {
+					uni.$emit('initCollapse')
+				}, 1000)
+			},
+						#end
+					#end
+				#end
+			#end
+            initData(){
+            	#set($nextTick='$'+"nextTick")
+				this.$nextTick(function(){
+					if (this.${context.formModel}.${pKeyName}) {
+						this.loading = true
+						request({
+							url: '/api/${context.module}/${context.className}/'+'detail/'+this.${context.formModel}.${pKeyName},
+							method: 'get',
+						}).then(res => {
+							this.dataInfo(res.data)
+							this.loading = false
+						})
+					}
+				})
+            },
+            submitForm(){
+				uni.navigateTo({
+					url: "./form?menuId=" + this.menuId + "&jurisdictionType=btn_edit&id="+this.${context.formModel}.${pKeyName}+"&idList="+this.idList
+				})
+            },
+            selfInit() {
+                this.$store.commit('base/UPDATE_RELATION_DATA', {})
+            },
+			dataInfo(dataAll){
+				let _dataAll =dataAll
+				this.${context.formModel}=_dataAll
+				this.collapse()
+			},
+			collapse(){
+				setTimeout(()=> {
+					#foreach($fieLdsModel in ${context.form})
+						#set($linzenkey = "${fieLdsModel.projectKey}")
+						#set($isEnd = "${fieLdsModel.isEnd}")
+						#set($formModel = ${fieLdsModel.formModel})
+						#set($outermost = ${formModel.outermost})
+						#set($config=$formModel.config)
+						#if($linzenkey=='collapse' || $linzenkey=='tab')
+							#if(${config.app}==true)
+								#if(${isEnd}=='0')
+									#if(${outermost}=='0')
+										this.$refs.${formModel.model}Current && this.$refs.${formModel.model}Current.init()
+									#end
+								#end
+							#end
+						#end
+					#end
+				}, 1000);
+			},
+		},
+    }
+
+</script>
+<style>
+	page{
+		background-color: #f0f2f6;
+	}
+</style>

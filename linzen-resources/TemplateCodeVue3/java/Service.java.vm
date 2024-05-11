@@ -1,0 +1,43 @@
+package ${package.Service};
+
+#set($moduleName = "${mainModelName.substring(0,1).toLowerCase()}${mainModelName.substring(1).toLowerCase()}")
+import ${package.Entity}.*;
+import com.linzen.base.service.SuperService;
+#if(${main})
+import ${modulePackageName}.model.${moduleName}.*;
+import java.util.*;
+#end
+
+/**
+ * ${genInfo.description}
+ * 版本： ${genInfo.version}
+ * 版权： ${genInfo.copyright}
+ * 作者： ${genInfo.createUser}
+ * 日期： ${genInfo.createDate}
+ */
+public interface ${table.serviceName} extends SuperService<${table.entityName}> {
+#if(${main})
+    #if(${pKeyName.toLowerCase().startsWith('f_')})
+        #set($peimaryKeyname = "${pKeyName.substring(2,3).toLowerCase()}${pKeyName.substring(3)}")
+    #else
+        #set($peimaryKeyname = "${pKeyName.substring(0,1).toLowerCase()}${pKeyName.substring(1).toLowerCase()}")
+    #end
+    #if($isList)
+    List<${table.entityName}> getList(${Name}Pagination ${name}Pagination);
+
+    List<${table.entityName}> getTypeList(${Name}Pagination ${name}Pagination,String dataType);
+
+    #end
+    ${table.entityName} getInfo(String ${peimaryKeyname});
+
+    void delete(${table.entityName} entity);
+
+    void create(${table.entityName} entity);
+
+    boolean update(String ${peimaryKeyname}, ${table.entityName} entity);
+
+	String checkForm(${Name}Form form,int i);
+
+    void saveOrUpdate(${Name}Form ${name}Form,String id, boolean isSave) throws Exception;
+#end
+}

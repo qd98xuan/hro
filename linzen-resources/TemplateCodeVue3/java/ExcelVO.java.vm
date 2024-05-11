@@ -1,0 +1,79 @@
+#parse("PublicMacro/ExcelMarco.vm")
+##通用参数
+#parse("PublicMacro/ConstantMarco.vm")
+#ConstantParams()
+#set($moduleName = "${context.genInfo.className.toLowerCase()}")
+package ${context.package}.model.${moduleName};
+
+import lombok.Data;
+import java.sql.Time;
+import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.alibaba.fastjson.annotation.JSONField;
+import cn.afterturn.easypoi.excel.annotation.Excel;
+import cn.afterturn.easypoi.excel.annotation.ExcelEntity;
+import cn.afterturn.easypoi.excel.annotation.ExcelCollection;
+import java.math.BigDecimal;
+import java.util.List;
+/**
+ *
+ * ${context.genInfo.description}
+ * @版本： ${context.genInfo.version}
+ * @版权： ${context.genInfo.copyright}
+ * @作者： ${context.genInfo.createUser}
+ * @日期： ${context.genInfo.createDate}
+ */
+@Data
+public class $!{context.className}ExcelVO{
+#if(${context.isMain} && !${context.isComplexVo})
+## 复杂表头对象
+#foreach($item in ${context.complexHeaderList})
+#if(${item.childColumns.size()}>0)
+    @JsonProperty("${item.id}")
+    @ExcelCollection(name="${item.fullName}(${item.id})",orderNum = "0")
+    private List<Complex${item.id}ExcelVO> ${item.id};
+#end
+#end
+#foreach($fieLdsModel in ${context.importFields})
+    #set($html = $fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($linzenkey = "${config.projectKey}")
+##  判断是否子表
+    #if(${vModel.contains("tableField")} )
+    @JsonProperty("${vModel}")
+    @ExcelCollection(name="${html.label}(${vModel})",orderNum = "${html.childList.size()}")
+    private List<${html.aliasUpName}ExcelVO> ${vModel};
+
+    #else
+    #if(!${context.complexFieldList.contains(${vModel})})
+        #CreateExcelFields($html,${foreach.index})
+    #end
+    #end
+#end
+#elseif(${context.isMain} && ${context.isComplexVo})
+#foreach($fieLdsModel in ${context.importFields})
+    #set($html = $fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($linzenkey = "${config.projectKey}")
+##复杂表头字段
+    #if(${context.complexList.contains(${vModel})} )
+        #CreateExcelFields($html,${foreach.index})
+    #end
+#end
+#else
+#foreach($html in ${context.children.childList})
+    #set($fieLdsModel = ${html.fieLdsModel})
+    #set($config = ${fieLdsModel.config})
+    #set($linzenkey = ${config.projectKey})
+    #set($vModel = "${fieLdsModel.vModel}")
+    #set($fieldName=${config.label})
+    #if($!vModel && ${fieLdsModel.needImport} && !$DownLoadSkipUint.contains($linzenkey))
+    #CreateExcelFields($fieLdsModel,${foreach.index})
+    #end
+#end
+#end
+
+}

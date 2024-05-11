@@ -1,0 +1,813 @@
+#set($mapObject ="Map<String, Object>")
+##  导入实例信息添加
+#macro(TemlateDownloadDemo $MapName $Field)
+    #set($key = $Field.config.projectKey)
+    #set($mul = $Field.multiple)
+    #set($level = $Field.level)
+    #set($vModelThis = $Field.vModel)
+    #if($Field.beforeVmodel)
+        #set($vModelThis = $Field.beforeVmodel)
+    #end
+    #if($key == "createUser" || $key == "updateUser" || $key == "createTime" || $key == "updateTime" || $key == "currOrganize" || $key == "currPosition" || $key == "currDept" || $key == "billRule")
+            ${MapName}.put("${vModelThis}", "系统自动生成");
+    #elseif($key == 'organizeSelect')
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:领致信息/产品部,领致信息/技术部");
+        #else
+            ${MapName}.put("${vModelThis}", "例:领致信息/技术部");
+        #end
+    #elseif($key == "depSelect")
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:产品部/部门编码,技术部/部门编码");
+        #else
+            ${MapName}.put("${vModelThis}", "例:技术部/部门编码");
+        #end
+    #elseif($key == "posSelect")
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:技术经理/岗位编码,技术员/岗位编码");
+        #else
+            ${MapName}.put("${vModelThis}", "例:技术员/岗位编码");
+        #end
+    #elseif($key == "userSelect")
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:张三/账号,李四/账号");
+        #else
+            ${MapName}.put("${vModelThis}", "例:张三/账号");
+        #end
+    #elseif($key == "usersSelect")
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:方方/账号,技术部/部门编码");
+        #else
+            ${MapName}.put("${vModelThis}", "例:方方/账号");
+        #end
+    #elseif($key == "roleSelect")
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:研发人员/角色编码,测试人员/角色编码");
+        #else
+            ${MapName}.put("${vModelThis}", "例:研发人员/角色编码");
+        #end
+    #elseif($key == "groupSelect")
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:A分组/分组编码,B分组/分组编码");
+        #else
+            ${MapName}.put("${vModelThis}", "例:A分组/分组编码");
+        #end
+    #elseif($key == 'datePicker')
+            ${MapName}.put("${vModelThis}", "例: ${Field.format}");
+    #elseif($key == 'timePicker')
+            ${MapName}.put("${vModelThis}", "例: ${Field.format}");
+    #elseif($key == 'areaSelect')
+    #if($level==0)
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:福建省,广东省");
+        #else
+            ${MapName}.put("${vModelThis}", "例:福建省");
+        #end
+    #elseif($level==1)
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:福建省/莆田市,广东省/广州市");
+        #else
+            ${MapName}.put("${vModelThis}", "例:福建省/莆田市");
+        #end
+    #elseif($level==2)
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:福建省/莆田市/城厢区,广东省/广州市/荔湾区");
+        #else
+            ${MapName}.put("${vModelThis}", "例:福建省/莆田市/城厢区");
+        #end
+    #elseif($level==3)
+        #if($mul)
+            ${MapName}.put("${vModelThis}", "例:福建省/莆田市/城厢区/霞林街道,广东省/广州市/荔湾区/沙面街道");
+        #else
+            ${MapName}.put("${vModelThis}", "例:福建省/莆田市/城厢区/霞林街道");
+        #end
+    #end
+    #else
+        ${MapName}.put("${vModelThis}", "");
+    #end
+#end
+##  主子副，entity转成map   isGetInfo是否不转换数据详情 isDetail 是否转换数据的详情
+#macro(EntityToMap)
+        ${mapObject} ${name}Map=JsonUtil.entityToMap(entity);
+        ${name}Map.put("id", ${name}Map.get("${pKeyName}"));
+        //副表数据
+    #foreach($child in ${columnTableHandle})
+        ${child.modelUpName}Entity  ${child.modelLowName}Entity = entity.get${child.modelUpName}();
+        if(ObjectUtil.isNotEmpty(${child.modelLowName}Entity)){
+            ${mapObject} ${child.modelLowName}Map=JsonUtil.entityToMap(${child.modelLowName}Entity);
+            for(String key:${child.modelLowName}Map.keySet()){
+                ${name}Map.put("linzen_${child.tableName}_linzen_"+key,${child.modelLowName}Map.get(key));
+            }
+        }
+    #end
+        //子表数据
+    #foreach($grid in ${childTableHandle})
+        List<${grid.aliasUpName}Entity> ${grid.aliasLowName}List = entity.get${grid.aliasUpName}();
+        ${name}Map.put("${grid.tableModel}",BeanUtil.copyToList(JsonUtil.getListToJsonArray(${grid.aliasLowName}List)));
+        ${name}Map.put("${grid.aliasLowName}List",BeanUtil.copyToList(JsonUtil.getListToJsonArray(${grid.aliasLowName}List)));
+    #end
+#end
+###########################以上为通用宏，以下是controller方法#################################
+##  获取列表信息
+#macro(GetList)
+    /**
+    * 列表
+    *
+    * @param pagination ${Name}Pagination
+    * @return ServiceResult
+    */
+    @Operation(summary = "获取列表")
+    @PostMapping("/getList")
+    public ServiceResult<PageListVO<Map<String, Object>>> list(@RequestBody ${Name}Pagination pagination)throws IOException{
+        List<${table.entityName}> list= ${serviceName}.getList(pagination);
+        List<${mapObject}> realList=new ArrayList<>();
+        for (${Name}Entity entity : list) {
+            #EntityToMap()
+            realList.add(${name}Map);
+        }
+        //数据转换
+        realList = generaterUtils.swapDataList(realList, ${Name}Constant.getFormData(), ${Name}Constant.getColumnData(), pagination.getModuleId(),${lineEdit});
+
+        #if($isFlow)
+        //流程状态添加
+        for($mapObject vo:realList){
+            FlowTaskEntity flowTaskEntity = generaterUtils.getInfoSubmit(String.valueOf(vo.get("flowTaskId")), FlowTaskEntity::getStatus);
+            if (flowTaskEntity!=null){
+                vo.put("flowState",flowTaskEntity.getStatus());
+            }else{
+                vo.put("flowState",null);
+            }
+            //添加流程id
+            String flowId="";
+            if(vo.get("flowid")!=null){
+                flowId = String.valueOf(vo.get("flowid"));
+            }
+            if(vo.get("flowid".toUpperCase())!=null){
+                flowId = String.valueOf(vo.get("flowid".toUpperCase()));
+            }
+            if(StringUtil.isNotEmpty(flowId)){
+                vo.put("flowId" ,flowId);
+            }
+        }
+        #end
+        #if($treeTable || $groupTable)
+        boolean isPc = "pc".equals(ServletUtil.getHeader("linzen-origin" ));
+        if(isPc){
+            //分组和树形的树形数据转换
+            realList = generaterUtils.swapDataList(realList, ${Name}Constant.getColumnData(), "${peimaryKeyname}");
+        }
+        #end
+        //返回对象
+        PageListVO<Map<String, Object>> vo = new PageListVO<>();
+        vo.setList(realList);
+        PaginationVO page = JsonUtil.createJsonToBean(pagination, PaginationVO.class);
+        vo.setPagination(page);
+        return ServiceResult.success(vo);
+    }
+#end
+##  新增
+#macro(CreateMethod)
+    /**
+    * 创建
+    *
+    * @param form ${Name}Form
+    * @return ServiceResult
+    */
+    @PostMapping(#if($isFlow)"/{id}"#end)
+    @Operation(summary = "创建")
+    public ServiceResult<String> create(#if($isFlow)@PathVariable("id") String id, #end@RequestBody @Valid ${Name}Form form) {
+        String b = ${serviceName}.checkForm(form,0);
+        if (StringUtil.isNotEmpty(b)){
+            return ServiceResult.error(b );
+        }
+        try{
+            ${name}Service.saveOrUpdate(form,#if($isFlow) id #else null #end,true);
+        }catch(Exception e){
+            return ServiceResult.error("新增数据失败");
+        }
+        return ServiceResult.success("创建成功");
+    }
+#end
+##  编辑
+#macro(UpdateMethod)
+    /**
+     * 
+     * 编辑
+     * 
+     * @param id String
+     * @param form ${Name}Form
+     * @return ServiceResult
+     */
+    @PutMapping("/{id}")
+    @Operation(summary = "更新")
+    public ServiceResult<String> update(@PathVariable("id") String id,@RequestBody @Valid ${Name}Form form,
+                                @RequestParam(value = "isImport", required = false) boolean isImport){
+        if (!isImport) {
+            String b =  ${name}Service.checkForm(form,1);
+            if (StringUtil.isNotEmpty(b)){
+                return ServiceResult.error(b );
+            }
+        }
+        ${Name}Entity entity= ${name}Service.getInfo(id);
+        if(entity!=null){
+            try{
+                ${name}Service.saveOrUpdate(form,id,false);
+            }catch(Exception e){
+                return ServiceResult.error("修改数据失败");
+            }
+            return ServiceResult.success("更新成功");
+        }else{
+            return ServiceResult.error("更新失败，数据不存在");
+        }
+    }
+#end
+##  获取详情(不转数据)
+#macro(GetInfoMethod)
+    /**
+    * 获取详情(编辑页)
+    * 编辑页面使用-不转换数据
+    * @param id
+    * @return
+    */
+    @Operation(summary = "信息")
+    @GetMapping("/{id}")
+    public ServiceResult<Map<String, Object>> info(@PathVariable("id") String id){
+        ${Name}Entity entity= ${name}Service.getInfo(id);
+        if(entity==null){
+            return ServiceResult.error("表单数据不存在！");
+        }
+##
+        #EntityToMap()
+        ${name}Map = generaterUtils.swapDataForm(${name}Map,${Name}Constant.getFormData(),${Name}Constant.TABLEFIELDKEY,${Name}Constant.TABLERENAMES);
+        return ServiceResult.success(${name}Map);
+    }
+#end
+##  详情(转换数据)
+#macro(GetDetailMethod)
+    /**
+    * 表单信息(详情页)
+    * 详情页面使用-转换数据
+    * @param id
+    * @return
+    */
+    @Operation(summary = "表单信息(详情页)")
+    @GetMapping("/detail/{id}")
+    public ServiceResult<Map<String, Object>> detailInfo(@PathVariable("id") String id){
+        ${Name}Entity entity= ${name}Service.getInfo(id);
+        if(entity==null){
+            return ServiceResult.error("表单数据不存在！");
+        }
+        #EntityToMap()
+        ${name}Map = generaterUtils.swapDataDetail(${name}Map,${Name}Constant.getFormData(),"${VisualDevId}",false);
+        return ServiceResult.success(${name}Map);
+    }
+#end
+##  删除
+#macro(DeleteMethod)
+    /**
+    * 删除
+    * @param id
+    * @return
+    */
+    @Operation(summary = "删除")
+    @DeleteMapping("/{id}")
+#if(${DS})
+    @DSTransactional
+#else
+    @Transactional
+#end
+    public ServiceResult<String> delete(@PathVariable("id") String id){
+        ${Name}Entity entity= ${name}Service.getInfo(id);
+        if(entity!=null){
+        #if($isFlow)
+        #if($snowflake)
+            FlowTaskEntity taskEntity = generaterUtils.getInfoSubmit(id, FlowTaskEntity::getId, FlowTaskEntity::getStatus);
+        #else
+            FlowTaskEntity taskEntity = generaterUtils.getInfoSubmit(entity.getFlowTaskId(), FlowTaskEntity::getId, FlowTaskEntity::getStatus);
+        #end
+            if (taskEntity != null) {
+                try {
+                    generaterUtils.deleteFlowTask(taskEntity);
+                } catch (WorkFlowException e) {
+                    e.printStackTrace();
+                }
+            }
+        #end
+    #if($logicalDelete)
+            //假删除
+            entity.setDelFlag(1);
+            entity.setDeleteUserId(userProvider.get().getUserId());
+            entity.setDeleteTime(new Date());
+            ${name}Service.update(id,entity);
+    #else
+            //主表数据删除
+            ${name}Service.delete(entity);
+##      副表
+        #if(${columnTableHandle.size()}>0)
+        #foreach($cl in ${columnTableHandle})
+            QueryWrapper<${cl.modelUpName}Entity> queryWrapper${cl.modelUpName}=new QueryWrapper<>();
+            #if($snowflake)
+            queryWrapper${cl.modelUpName}.lambda().eq(${cl.modelUpName}Entity::get${cl.relationUpField},entity.get${cl.mainUpKey}());
+            #else
+            queryWrapper${cl.modelUpName}.lambda().eq(${cl.modelUpName}Entity::get${cl.relationUpField}, entity.getFlowTaskId());
+            #end
+            //副表数据删除
+            ${cl.modelLowName}Service.remove(queryWrapper${cl.modelUpName});
+        #end
+        #end
+##      子表
+        #foreach($tableModel in ${childTableHandle})
+            #set($mainFeild="${tableModel.relationField}")
+            #set($MainFeild="${tableModel.relationField.substring(0,1).toUpperCase()}${tableModel.relationField.substring(1)}")
+            #set($childFeild="${tableModel.tablefield}")
+            #set($ChildFeild="${tableModel.tablefield.substring(0,1).toUpperCase()}${tableModel.tablefield.substring(1)}")
+            QueryWrapper<${tableModel.aliasUpName}Entity> queryWrapper${tableModel.aliasUpName}=new QueryWrapper<>();
+            #if($snowflake)
+            queryWrapper${tableModel.aliasUpName}.lambda().eq(${tableModel.aliasUpName}Entity::get${ChildFeild},entity.get${MainFeild}());
+            #else
+            queryWrapper${tableModel.aliasUpName}.lambda().eq(${tableModel.aliasUpName}Entity::get${ChildFeild},entity.getFlowTaskId());
+            #end
+            //子表数据删除
+            ${tableModel.aliasLowName}Service.remove(queryWrapper${tableModel.aliasUpName});
+        #end
+    #end
+        }
+        return ServiceResult.success("删除成功");
+    }
+#end
+##  批量删除
+#macro(BatchRemoveMethod)
+    /**
+    * 批量删除
+    * @param ids
+    * @return
+    */
+    @DeleteMapping("/batchRemove")
+    #if(${DS})
+    @DSTransactional
+    #else
+    @Transactional
+    #end
+    @Operation(summary = "批量删除")
+    public ServiceResult<String> batchRemove(@RequestBody String ids){
+    #if(!$isFlow)
+        List<String> idList = BeanUtil.copyToList(ids, String.class);
+        int i =0;
+        for (String allId : idList){
+            this.delete(allId);
+            i++;
+        }
+        if (i == 0 ){
+        return ServiceResult.error("删除失败");
+        }
+        return ServiceResult.success("删除成功");
+    #else
+        #FlowBatchDel()
+    #end
+    }
+#end
+##流程批量删除
+#macro(FlowBatchDel)
+    List<String> idList = BeanUtil.copyToList(ids, String.class);
+    List<String> columnIdList = new ArrayList<>(20);
+    int i =0;
+    String errInfo = "";
+    for (String allId : idList){
+        #if($snowflake)
+        FlowTaskEntity taskEntity = generaterUtils.getInfoSubmit(allId, FlowTaskEntity::getId, FlowTaskEntity::getStatus);
+        #else
+        ${Name}Entity entity= ${name}Service.getInfo(allId);
+        FlowTaskEntity taskEntity = generaterUtils.getInfoSubmit(entity.getFlowTaskId(), FlowTaskEntity::getId, FlowTaskEntity::getStatus);
+        #end
+        if (taskEntity==null){
+            columnIdList.add(allId);
+            this.delete(allId);
+        }else if (taskEntity.getStatus().equals(0) || taskEntity.getStatus().equals(4)){
+            try {
+                generaterUtils.deleteFlowTask(taskEntity);
+                columnIdList.add(allId);
+                this.delete(allId);
+                i++;
+            } catch (WorkFlowException e) {
+                errInfo = e.getMessage();
+                e.printStackTrace();
+            }
+        }
+    }
+    if (i == 0 && columnIdList.size()==0){
+        return ServiceResult.error("流程已发起，无法删除");
+    }
+    if (StringUtil.isNotEmpty(errInfo)){
+        return ServiceResult.error(errInfo);
+    }
+    return ServiceResult.success("删除成功");
+#end
+##  批量打印
+#macro(BatchPrintMethod)
+#end
+##  导入
+#macro(UploaderMethod)
+    @Operation(summary = "上传文件")
+    @PostMapping("/Uploader")
+    public ServiceResult<Object> Uploader() {
+        List<MultipartFile> list = UpUtil.getFileAll();
+        MultipartFile file = list.get(0);
+        if (file.getOriginalFilename().endsWith(".xlsx") || file.getOriginalFilename().endsWith(".xls")) {
+            String filePath = XSSEscape.escape(configValueUtil.getTemporaryFilePath());
+            String fileName = XSSEscape.escape(RandomUtil.uuId() + "." + UpUtil.getFileType(file));
+            //上传文件
+            #if(${isCloud}=="cloud")
+            FileInfo fileInfo = fileUploadApi.uploadFile(file, filePath, fileName);
+            #else
+            FileInfo fileInfo = FileUploadUtils.uploadFile(file, filePath, fileName);
+            #end
+            DownloadVO vo = DownloadVO.builder().build();
+            vo.setName(fileInfo.getFilename());
+            return ServiceResult.success(vo);
+        } else {
+            return ServiceResult.error("选择文件不符合导入");
+        }
+    }
+
+    /**
+    * 模板下载
+    *
+    * @return
+    */
+    @Operation(summary = "模板下载")
+    @GetMapping("/TemplateDownload")
+    public ServiceResult<DownloadVO>  TemplateDownload(){
+        DownloadVO vo = DownloadVO.builder().build();
+        UserInfo userInfo = userProvider.get();
+        ${mapObject} dataMap = new HashMap<>();
+        //主表对象
+        List<ExcelExportEntity> entitys = new ArrayList<>();
+        //以下添加字段
+##        导入字段添加到entity
+        #foreach($fieldModel in $importFields)
+            #set($config = $fieldModel.config)
+            #set($vModel = ${fieldModel.vModel})
+            #if($vModel.contains("tableField"))
+                //${vModel}子表对象
+                ExcelExportEntity ${vModel}ExcelEntity = new ExcelExportEntity("${fieldModel.label}(${vModel})","${vModel}");
+                List<ExcelExportEntity> ${vModel}ExcelEntityList = new ArrayList<>();
+                ${mapObject} ${vModel}ChildData = new HashMap<>();
+                List<${mapObject}> ${vModel}ChildDataList = new ArrayList<>();
+                #foreach($child in ${fieldModel.childList})
+                    #set($itemFields =$child.fieLdsModel)
+                    ${vModel}ExcelEntityList.add(new ExcelExportEntity("${itemFields.config.label}($vModel-${itemFields.vModel})" ,"${itemFields.vModel}"));
+                    #TemlateDownloadDemo("${vModel}ChildData",$itemFields)
+                #end
+                ${vModel}ChildDataList.add(${vModel}ChildData);
+                dataMap.put("${vModel}",${vModel}ChildDataList);
+                ${vModel}ExcelEntity.setList(${vModel}ExcelEntityList);
+                entitys.add(${vModel}ExcelEntity);
+            #else
+                entitys.add(new ExcelExportEntity("${config.label}($vModel)" ,"$vModel"));
+                #TemlateDownloadDemo("dataMap",$fieldModel)
+            #end
+        #end
+        List<${mapObject}> list = new ArrayList<>();
+        list.add(dataMap);
+
+        ExportParams exportParams = new ExportParams(null, "${formModelName}模板");
+        exportParams.setType(ExcelType.XSSF);
+        try{
+        @Cleanup Workbook workbook = new HSSFWorkbook();
+        if (entitys.size()>0){
+        if (list.size()==0){
+        list.add(new HashMap<>());
+        }
+        //复杂表头-表头和数据处理
+        ColumnDataModel columnDataModel = JsonUtil.createJsonToBean(${Name}Constant.getColumnData(), ColumnDataModel.class);
+        List<HeaderModel> complexHeaderList = columnDataModel.getComplexHeaderList();
+        if (!Objects.equals(columnDataModel.getType(), 3) && !Objects.equals(columnDataModel.getType(), 5)) {
+            entitys = VisualUtils.complexHeaderHandel(entitys, complexHeaderList, false);
+            list =  VisualUtils.complexHeaderDataHandel(list, complexHeaderList, false);
+        }
+        workbook = ExcelExportUtil.exportExcel(exportParams, entitys, list);
+        }
+        String fileName = "${formModelName}模板_" + DateUtil.dateNow("yyyyMMddHHmmss") + ".xlsx";
+        MultipartFile multipartFile = ExcelUtil.workbookToCommonsMultipartFile(workbook, fileName);
+        #if(${isCloud}=="cloud")
+            String temporaryFilePath = fileApi.getPath(FileTypeConstant.TEMPORARY);
+            FileInfo fileInfo = fileUploadApi.uploadFile(multipartFile, temporaryFilePath, fileName);
+        #else
+            String temporaryFilePath = configValueUtil.getTemporaryFilePath();
+            FileInfo fileInfo = FileUploadUtils.uploadFile(multipartFile, temporaryFilePath, fileName);
+        #end
+        vo.setName(fileInfo.getFilename());
+        vo.setUrl(UploaderUtil.uploaderFile(fileInfo.getFilename() + "#" + "Temporary") + "&name=" + fileName);
+        } catch (Exception e) {
+        log.error("模板信息导出Excel错误:{}", e.getMessage());
+        e.printStackTrace();
+        }
+        return ServiceResult.success(vo);
+    }
+
+    /**
+    * 导入预览
+    *
+    * @return
+    */
+    @Operation(summary = "导入预览" )
+    @GetMapping("/ImportPreview")
+    public ServiceResult<${mapObject}> ImportPreview(String fileName) throws Exception {
+        ${mapObject} headAndDataMap = new HashMap<>(2);
+        #if(${isCloud}=="cloud")
+            String filePath = fileApi.getLocalBasePath() + configValueUtil.getTemporaryFilePath();
+            UploadFileModel uploadFileModel =new UploadFileModel();
+            uploadFileModel.setFolderName(filePath);
+            uploadFileModel.setObjectName(fileName);
+            fileUploadApi.downToLocal(uploadFileModel);
+        #else
+            String filePath = FileUploadUtils.getLocalBasePath() + configValueUtil.getTemporaryFilePath();
+            FileUploadUtils.downLocal(configValueUtil.getTemporaryFilePath(), filePath, fileName);
+        #end
+        File temporary = new File(XSSEscape.escapePath(filePath + fileName));
+        #if($importHasChildren || ${complexFieldList.size()} > 0)
+            int headerRowIndex = 2;
+        #else
+            int headerRowIndex = 1;
+        #end
+        ImportParams params = new ImportParams();
+        params.setTitleRows(0);
+        params.setHeadRows(headerRowIndex);
+        params.setNeedVerify(true);
+        try {
+            List<Map> excelDataList = ExcelUtil.importExcel(temporary, 0, headerRowIndex, Map.class);
+
+            ColumnDataModel columnDataModel = JsonUtil.createJsonToBean(${Name}Constant.getColumnData(), ColumnDataModel.class);
+            UploaderTemplateModel uploaderTemplateModel = JsonUtil.createJsonToBean(columnDataModel.getUploaderTemplateJson(), UploaderTemplateModel.class);
+            List<String> selectKey = uploaderTemplateModel.getSelectKey();
+            //子表合并
+            List<$mapObject> results = FormExecelUtils.dataMergeChildTable(excelDataList,selectKey);
+            // 导入字段
+            List<ExcelImFieldModel> columns = new ArrayList<>();
+## 添加复杂表头字段信息 --uploadFieldList 导入字段选择。如果没有字段则不生成相应对象
+#foreach($item in ${complexHeaderList})
+    #if(${item.childColumns.size()}>0 && ${item.uploadFieldList.size()}>0)
+            //${item.fullName} 复杂表头对象
+            List<ExcelImFieldModel> ${item.id}columns = new ArrayList<>();
+            #foreach($itemFields in ${item.uploadFieldList})
+            ${item.id}columns.add(new ExcelImFieldModel("${itemFields.vModel}" ,"${itemFields.label}"));
+            #end
+            columns.add(new ExcelImFieldModel("${item.id}","${item.fullName}","complexHeader",${item.id}columns));
+    #end
+#end
+## 添加导入所有字段信息
+#foreach($fieldModel in $importFields)
+    #set($config = $fieldModel.config)
+    #set($vModel = ${fieldModel.vModel})
+    #if($vModel.contains("tableField"))
+            //${vModel}子表对象
+            List<ExcelImFieldModel> ${vModel}columns = new ArrayList<>();
+        #foreach($child in ${fieldModel.childList})
+            #set($itemFields =$child.fieLdsModel)
+            ${vModel}columns.add(new ExcelImFieldModel("${itemFields.vModel}" ,"${itemFields.config.label}"));
+        #end
+            columns.add(new ExcelImFieldModel("${vModel}","${fieldModel.label}","table",${vModel}columns));
+    #elseif(!${complexFieldList.contains(${vModel})})
+            columns.add(new ExcelImFieldModel("${vModel}","${config.label}","${config.projectKey}"));
+    #end
+#end
+            headAndDataMap.put("dataRow" , results);
+            headAndDataMap.put("headerRow" , BeanUtil.copyToList(JsonUtil.getListToJsonArray(columns)));
+            } catch (Exception e){
+            e.printStackTrace();
+            return ServiceResult.error("表头名称不可更改,表头行不能删除");
+        }
+        return ServiceResult.success(headAndDataMap);
+    }
+
+    /**
+    * 导入数据
+    *
+    * @return
+    */
+    @Operation(summary = "导入数据" )
+    @PostMapping("/ImportData")
+    public ServiceResult<ExcelImportModel> ImportData(@RequestBody VisualImportModel visualImportModel) throws Exception {
+        List<$mapObject> listData = visualImportModel.getList();
+        ImportFormCheckUniqueModel uniqueModel = new ImportFormCheckUniqueModel();
+        uniqueModel.setDbLinkId(${Name}Constant.DBLINKID);
+        uniqueModel.setUpdate(Objects.equals("${importType}", "2"));
+        #if($isFlow)uniqueModel.setFlowId(visualImportModel.getFlowId()); #end
+
+        Map<String,String> tablefieldkey = new HashMap<>();
+        for(String key:${Name}Constant.TABLEFIELDKEY.keySet()){
+        tablefieldkey.put(key,${Name}Constant.TABLERENAMES.get(${Name}Constant.TABLEFIELDKEY.get(key)));
+        }
+        ExcelImportModel excelImportModel = generaterUtils.importData(${Name}Constant.getFormData(),listData,uniqueModel, tablefieldkey,${Name}Constant.getTableList());
+        List<ImportDataModel> importDataModel = uniqueModel.getImportDataModel();
+        for (ImportDataModel model : importDataModel) {
+            String id = model.getId();
+            $mapObject result = model.getResultData();
+            if(StringUtil.isNotEmpty(id)){
+                update(id, JsonUtil.createJsonToBean(result,${Name}Form.class), true);
+            }else {
+                create(#if($isFlow)RandomUtil.uuId(),#end JsonUtil.createJsonToBean(result,${Name}Form.class));
+            }
+        }
+        return ServiceResult.success(excelImportModel);
+    }
+
+    /**
+    * 导出异常报告
+    *
+    * @return
+    */
+    @Operation(summary = "导出异常报告")
+    @PostMapping("/ImportExceptionData")
+    public ServiceResult<DownloadVO> ImportExceptionData(@RequestBody VisualImportModel visualImportModel) {
+        DownloadVO vo=DownloadVO.builder().build();
+        List<${Name}ExcelErrorVO> ${name}VOList = BeanUtil.copyToList(visualImportModel.getList(), ${Name}ExcelErrorVO.class);
+        UserInfo userInfo = userProvider.get();
+
+        try{
+        @Cleanup Workbook workbook = new HSSFWorkbook();
+        ExportParams exportParams = new ExportParams(null, "错误报告");
+        exportParams.setType(ExcelType.XSSF);
+        workbook = ExcelExportUtil.exportExcel(exportParams,
+        ${Name}ExcelErrorVO.class, ${name}VOList);
+
+        String fileName = "${formModelName}错误报告_" + DateUtil.dateNow("yyyyMMddHHmmss") + ".xlsx";
+        MultipartFile multipartFile = ExcelUtil.workbookToCommonsMultipartFile(workbook, fileName);
+        #if(${isCloud}=="cloud")
+            String temporaryFilePath = fileApi.getPath(FileTypeConstant.TEMPORARY);
+            FileInfo fileInfo = fileUploadApi.uploadFile(multipartFile, temporaryFilePath, fileName);
+        #else
+            String temporaryFilePath = configValueUtil.getTemporaryFilePath();
+            FileInfo fileInfo = FileUploadUtils.uploadFile(multipartFile, temporaryFilePath, fileName);
+        #end
+        vo.setName(fileInfo.getFilename());
+        vo.setUrl(UploaderUtil.uploaderFile(fileInfo.getFilename() + "#" + "Temporary") + "&name=" + fileName);
+        } catch (Exception e) {
+        e.printStackTrace();
+        }
+        return ServiceResult.success(vo);
+    }
+#end
+##  导出
+#macro(ExportMethod)
+    /**
+    * 导出Excel
+    *
+    * @return
+    */
+    @Operation(summary = "导出Excel")
+    @PostMapping("/Actions/Export")
+    public ServiceResult Export(@RequestBody ${Name}Pagination pagination) throws IOException {
+        if (StringUtil.isEmpty(pagination.getSelectKey())){
+            return ServiceResult.error("请选择导出字段");
+        }
+        List<${table.entityName}> list= ${serviceName}.getList(pagination);
+        List<${mapObject}> realList=new ArrayList<>();
+        for (${Name}Entity entity : list) {
+            #EntityToMap()
+            realList.add(${name}Map);
+        }
+        //数据转换
+        realList = generaterUtils.swapDataList(realList, ${Name}Constant.getFormData(), ${Name}Constant.getColumnData(), pagination.getModuleId(),${lineEdit});
+        String[]keys=!StringUtil.isEmpty(pagination.getSelectKey())?pagination.getSelectKey():new String[0];
+        UserInfo userInfo=userProvider.get();
+        #if(${isCloud}=="cloud")
+            DownloadVO vo=this.creatModelExcel(fileApi.getPath(FileTypeConstant.TEMPORARY),realList,keys,userInfo);
+        #else
+            DownloadVO vo=this.creatModelExcel(configValueUtil.getTemporaryFilePath(),realList,keys,userInfo);
+        #end
+        return ServiceResult.success(vo);
+    }
+
+    /**
+    * 导出表格方法
+    */
+    public DownloadVO creatModelExcel(String path,List<${mapObject}>list,String[]keys,UserInfo userInfo){
+        DownloadVO vo=DownloadVO.builder().build();
+        List<ExcelExportEntity> entitys=new ArrayList<>();
+        if(keys.length>0){
+##    子表对象
+        #foreach($cl in $childTableHandle)
+            ExcelExportEntity ${cl.tableModel}ExcelEntity = new ExcelExportEntity("${cl.label}","${cl.tableModel}");
+            List<ExcelExportEntity> ${cl.tableModel}List = new ArrayList<>();
+        #end
+        #set($lineEditName = "#if(${lineEdit})_name#end")
+            for(String key:keys){
+                switch(key){
+        #if($columnListSize.size()>0)
+##        主表
+            #foreach($fieldModel in ${mastTableHandle})
+                #set($config = $fieldModel.config)
+                #set($vModel = ${fieldModel.vModel})
+                #if($vModel)
+                    case "${vModel}" :
+                    entitys.add(new ExcelExportEntity("${config.label}" ,"${vModel}${lineEditName}"));
+                    break;
+                #end
+            #end
+##        副表
+            #foreach($clid in $columnTableHandle)
+                #set($fieLdsModelList = $clid.fieLdsModelList)
+                #foreach($cf in $fieLdsModelList)
+                    #set($field = ${cf.field})
+                    #if($field)
+                    #set($label = $cf.mastTable.fieLdsModel.config.label)
+                    #set($lowName= ${cf.table.toLowerCase()})
+                    case "${cf.vModel}" :
+                    entitys.add(new ExcelExportEntity("${label}" ,"${cf.vModel}${lineEditName}"));
+                    break;
+                    #end
+                #end
+            #end
+##        子表
+            #foreach($cl in $childTableHandle)
+                #set($clForm = $cl.childList)
+                #foreach($clField in $clForm)
+                    #set($clForm =  $clField.fieLdsModel)
+                    #if($!{clField.fieLdsModel.vModel})
+                    case "${cl.tableModel}-${clField.fieLdsModel.vModel}":
+                    ${cl.tableModel}List.add(new ExcelExportEntity("${clField.fieLdsModel.config.label}" ,"${clField.fieLdsModel.vModel}${lineEditName}"));
+                    break;
+                    #end
+                #end
+            #end
+                    default:
+                    break;
+        #end
+                }
+            }
+        #foreach($cl in $childTableHandle)
+            if(${cl.tableModel}List.size() > 0){
+                ${cl.tableModel}ExcelEntity.setList(${cl.tableModel}List);
+                entitys.add(${cl.tableModel}ExcelEntity);
+            }
+        #end
+        }
+
+        ExportParams exportParams = new ExportParams(null, "表单信息");
+        exportParams.setType(ExcelType.XSSF);
+        try{
+            @Cleanup Workbook workbook = new HSSFWorkbook();
+            if (entitys.size()>0){
+                if (list.size()==0){
+                    list.add(new HashMap<>());
+                }
+                //去除空数据
+                List<$mapObject> dataList = new ArrayList<>();
+                for ($mapObject map : list) {
+                    int i = 0;
+                    for (String key : keys) {
+                        //子表
+                        if (key.toLowerCase().startsWith("tablefield")) {
+                            String tableField = key.substring(0, key.indexOf("-" ));
+                            String field = key.substring(key.indexOf("-" ) + 1);
+                            Object o = map.get(tableField);
+                            if (o != null) {
+                                List<$mapObject> childList = (List<$mapObject>) o;
+                                for ($mapObject childMap : childList) {
+                                    if (childMap.get(field) != null) {
+                                        i++;
+                                    }
+                                }
+                            }
+                        } else {
+                            Object o = map.get(key);
+                            if (o != null) {
+                                i++;
+                            }
+                        }
+                    }
+                    if (i > 0) {
+                        dataList.add(map);
+                    }
+                }
+                List<ExcelExportEntity> mergerEntitys = new ArrayList<>(entitys);
+                List<$mapObject> mergerList=new ArrayList<>(dataList);
+                //复杂表头-表头和数据处理
+                ColumnDataModel columnDataModel = JsonUtil.createJsonToBean(${Name}Constant.getColumnData(), ColumnDataModel.class);
+                List<HeaderModel> complexHeaderList = columnDataModel.getComplexHeaderList();
+                if (!Objects.equals(columnDataModel.getType(), 3) && !Objects.equals(columnDataModel.getType(), 5)) {
+                    entitys = VisualUtils.complexHeaderHandel(entitys, complexHeaderList, Objects.equals(columnDataModel.getType(), 4));
+                    dataList =  VisualUtils.complexHeaderDataHandel(dataList, complexHeaderList, Objects.equals(columnDataModel.getType(), 4));
+                }
+                workbook = ExcelExportUtil.exportExcel(exportParams, entitys, dataList);
+                VisualUtils.mergerVertical(workbook, mergerEntitys, mergerList);
+            }
+            String fileName = "${formModelName}表单信息_" + DateUtil.dateNow("yyyyMMddHHmmss") + ".xlsx";
+            MultipartFile multipartFile = ExcelUtil.workbookToCommonsMultipartFile(workbook, fileName);
+            #if(${isCloud}=="cloud")
+            String temporaryFilePath = fileApi.getPath(FileTypeConstant.TEMPORARY);
+            FileInfo fileInfo = fileUploadApi.uploadFile(multipartFile, temporaryFilePath, fileName);
+            #else
+            String temporaryFilePath = configValueUtil.getTemporaryFilePath();
+            FileInfo fileInfo = FileUploadUtils.uploadFile(multipartFile, temporaryFilePath, fileName);
+            #end
+            vo.setName(fileInfo.getFilename());
+            vo.setUrl(UploaderUtil.uploaderFile(fileInfo.getFilename() + "#" + "Temporary") + "&name=" + fileName);
+        } catch (Exception e) {
+            log.error("信息导出Excel错误:{}", e.getMessage());
+            e.printStackTrace();
+        }
+        return vo;
+    }
+#end

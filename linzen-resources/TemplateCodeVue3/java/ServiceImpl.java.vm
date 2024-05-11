@@ -1,0 +1,100 @@
+#parse("PublicMacro/ServiceImpMarco.vm")
+#set($moduleName = "${mainModelName.substring(0,1).toLowerCase()}${mainModelName.substring(1).toLowerCase()}")
+#set($peimaryKeyName="${pKeyName.substring(0,1).toUpperCase()}${pKeyName.substring(1)}")
+package ${package.ServiceImpl};
+
+import ${package.Entity}.*;
+import ${package.Mapper}.${table.mapperName};
+import ${package.Service}.*;
+import ${superServiceImplClassPackage};
+import ${modulePackageName}.model.${moduleName}.*;
+import org.springframework.stereotype.Service;
+import com.linzen.base.service.SuperServiceImpl;
+#if(${main})
+#if(${DS})
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.linzen.database.util.DataSourceUtil;
+import com.linzen.database.model.entity.DbLinkEntity;
+import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
+import com.linzen.database.plugins.DynamicSourceGeneratorInterface;
+#end
+import java.math.BigDecimal;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.bean.BeanUtil;
+import com.linzen.util.GeneraterUtils;
+import java.lang.reflect.Field;
+import com.baomidou.mybatisplus.annotation.TableField;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import com.linzen.base.model.ColumnDataModel;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import com.baomidou.dynamic.datasource.annotation.DSTransactional;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.yulichang.toolkit.JoinWrappers;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import com.linzen.model.QueryAllModel;
+import java.text.SimpleDateFormat;
+import com.linzen.util.*;
+import java.util.*;
+import com.linzen.base.UserInfo;
+import com.linzen.permission.entity.SysUserEntity;
+import com.linzen.constant.WebPageConst;
+#end
+/**
+ *
+ * ${genInfo.description}
+ * 版本： ${genInfo.version}
+ * 版权： ${genInfo.copyright}
+ * 作者： ${genInfo.createUser}
+ * 日期： ${genInfo.createDate}
+ */
+@Service
+#if(${DS})
+@DS("${DS}")
+#end
+public class ${table.serviceImplName} extends SuperServiceImpl<${table.mapperName}, ${table.entityName}> implements ${table.serviceName}#if(${DS}),DynamicSourceGeneratorInterface #end{
+#if(${main})
+    @Autowired
+    private GeneraterUtils generaterUtils;
+
+    @Autowired
+    private UserProvider userProvider;
+	
+	public static final String MAIN_TABLE_NAME = "";
+    #foreach($child in ${columnTableHandle})
+    @Autowired
+	private  ${child.modelUpName}Service ${child.modelLowName}Service;
+    #end
+    #foreach($subfield in ${childTableHandle})
+    @Autowired
+    private ${subfield.aliasUpName}Service ${subfield.aliasLowName}Service;
+    #end
+##    通用变量
+    #set($Name = "${genInfo.className.substring(0,1).toUpperCase()}${genInfo.className.substring(1)}")
+    #set($name = "${genInfo.className.substring(0,1).toLowerCase()}${genInfo.className.substring(1)}")
+    #set($QueryWrapper = "${name}QueryWrapper")
+    #set($serviceName = "${table.serviceName.substring(0,1).toLowerCase()}${table.serviceName.substring(1)}")
+    #set($Entity = "${table.entityName}")
+    #set($searchListSize =$!{searchList})
+    #if($isList)
+##  列表接口
+    #GetTypeList()
+    #end
+##  增删改查接口
+    #CrudMethod()
+##  表单验证
+    #CheckForm()
+##  保存修改事务方法
+    #SaveOrUpdate()
+#end
+## 数据源切换
+#if(${DS})
+    @Override
+    public DataSourceUtil getDataSource() {
+        return generaterUtils..getDataSource(this.getClass().getAnnotation(DS.class).value());
+    }
+#end
+}

@@ -1,0 +1,77 @@
+##通用参数
+#parse("PublicMacro/ConstantMarco.vm")
+#ConstantParams()
+#set($modelPath = "model."+${context.modelPathName})
+#set($pKeyName =${context.pKeyName})
+#set($peimaryKeyName = "${pKeyName.substring(0,1).toUpperCase()}${pKeyName.substring(1)}")
+#set($peimaryKeyname = "${pKeyName.substring(0,1).toLowerCase()}${pKeyName.substring(1)}")
+package ${context.package}.${modelPath};
+
+import lombok.Data;
+import java.util.List;
+import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * ${context.genInfo.description}
+ * @版本： ${context.genInfo.version}
+ * @版权： ${context.genInfo.copyright}
+ * @作者： ${context.genInfo.createUser}
+ * @日期： ${context.genInfo.createDate}
+ */
+@Data
+public class $!{context.className}Form  {
+    /** 主键 */
+    private String $!{peimaryKeyname};
+#foreach($html in ${context.children})
+    /** 子表数据 **/
+    @JsonProperty("${html.aliasLowName}List")
+    private List<${html.aliasUpName}Model> ${html.aliasLowName}List;
+#end
+#if(${context.version})
+    /** 乐观锁 **/
+    @JsonProperty("version")
+    private Integer version;
+#end
+#if(${context.isFlow})
+    /** 流程id **/
+    @JsonProperty("flowId")
+    private String flowId;
+#end
+
+##  主副表字段
+#foreach($item in ${context.form})
+#if($item.projectKey=='mast' || $item.projectKey=='mastTable')
+    #set($html = $item.formColumnModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #if($item.projectKey=='mastTable')
+        #set($html = $item.formMastTableModel.mastTable.fieLdsModel)
+        #set($vModel = "${item.formMastTableModel.vModel}")
+    #end
+    #if($vModel!='')
+        #set($config = $html.config)
+        #set($linzenkey = "${config.projectKey}")
+        #set($fieldName=${config.label})
+        #if(${linzenkey}!='text' && ${linzenkey}!='divider')
+    /** ${fieldName} **/
+    @JsonProperty("${vModel}")
+            #if(${linzenkey}=='inputNumber' || ${linzenkey}=='calculate')
+                #if(${fieLdsModel.formColumnModel.fieLdsModel.precision}==0)
+    private Integer ${vModel};
+                #else
+    private BigDecimal ${vModel};
+                #end
+            #elseif(${linzenkey}=='slider' || ${linzenkey} == 'rate')
+    private BigDecimal ${vModel};
+            #elseif(${linzenkey} == 'switch')
+    private Integer ${vModel};
+            #elseif(${multipleUnit.contains(${linzenkey})} || ${UploadFileUnit.contains(${linzenkey})})
+    private Object ${vModel};
+            #else
+    private String ${vModel};
+            #end
+        #end
+    #end
+#end
+#end
+}

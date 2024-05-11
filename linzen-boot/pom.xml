@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.linzen</groupId>
+        <artifactId>linzen-common</artifactId>
+        <version>0.0.1-RELEASE</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>linzen-boot</artifactId>
+    <packaging>pom</packaging>
+    <version>0.0.1-RELEASE</version>
+
+    <modules>
+        <module>linzen-admin</module>
+        <module>linzen-oauth</module>
+        <module>linzen-system</module>
+        <module>linzen-example</module>
+        <module>linzen-extend</module>
+        <module>linzen-visualdev</module>
+        <module>linzen-workflow</module>
+        <module>linzen-file</module>
+        <module>linzen-exception</module>
+        <module>linzen-visualdata</module>
+        <module>linzen-app</module>
+        <module>linzen-form</module>
+        <module>linzen-permission</module>
+        <module>linzen-message</module>
+        <module>linzen-public/linzen-common-all</module>
+        <module>linzen-public/linzen-provider</module>
+        <module>linzen-public/linzen-generater-base</module>
+        <module>linzen-hro</module>
+    </modules>
+
+    <properties>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+
+        </dependencies>
+    </dependencyManagement>
+
+
+
+</project>

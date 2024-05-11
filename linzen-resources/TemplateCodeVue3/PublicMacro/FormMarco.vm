@@ -1,0 +1,1599 @@
+##通用参数
+#parse("PublicMacro/ConstantMarco.vm")
+#ConstantParams()
+##  编辑-表单渲染通用模块
+#macro(FormRendering)
+#foreach($fieLdsModel in ${context.form})
+    #set($projectKey = "${fieLdsModel.projectKey}")
+    #set($isEnd = "${fieLdsModel.isEnd}")
+    #set($formModel = ${fieLdsModel.formModel})
+    #set($config=$formModel.config)
+    #set($span=$config.span)
+    #set($outermost = ${formModel.outermost})
+    #set($borderType = ${formModel.borderType})
+    #set($borderColor = ${formModel.borderColor})
+    #set($borderWidth = ${formModel.borderWidth})
+    #set($pcshow = $config.pc)
+    #if(${projectKey}=='row' && $pcshow == true)
+        #if(${isEnd}=='0')
+        <a-col :span="${formModel.span}" class="ant-col-item">
+        <a-row :gutter="#if(${context.formStyle}=='word-form')0#else${context.gutter}#end">
+        #else
+        </a-row>
+        </a-col>
+        #end
+    #elseif(${projectKey}=='card' && $pcshow == true)
+        #if(${isEnd}=='0')
+        <a-col  #if(${span}) :span="${span}" #else :span="24" #end class="ant-col-item">
+        <a-card class="mb-20"   #if(${formModel.shadow}=='hover') hoverable #end>
+            #if(${formModel.header})
+                <template #title>${formModel.header}#if(${formModel.header} && ${config.tipLabel})<BasicHelp text="${config.tipLabel}" />#end</template>
+            #end
+            <a-row>
+        #else
+            </a-row>
+        </a-card>
+        </a-col>
+        #end
+    #elseif(${projectKey}=='tab' && $pcshow == true)
+        #set($tabs = "a-tabs")
+        #if(${outermost}=='1')
+            #set($tabs = "a-tab-pane")
+        #end
+        #if(${isEnd}=='0')
+            #if(${outermost}=='0')
+            <a-col :span="${formModel.span}" class="ant-col-item">
+                <${tabs}  v-model:activeKey="state.${formModel.model}" #if($formModel.type)type="${formModel.type}"#end tabPosition="${formModel.tabPosition}" class="mb-20" >
+            #else
+                <${tabs}  tab="${formModel.title}" key="${formModel.name}" forceRender>
+                <a-row>
+            #end
+        #else
+            #if(${outermost}=='0')
+            </${tabs}>
+            </a-col>
+            #else
+            </a-row>
+            </${tabs} >
+            #end
+        #end
+    #elseif(${projectKey}=='tableGrid' || ${projectKey}=='tableGridTd' || ${projectKey}=='tableGridTr')
+        #set($tabs = "tbody")
+        #set($tableGrid = "table")
+        #if(${projectKey}=='tableGridTr')
+            #set($tabs = "tr")
+        #elseif(${projectKey}=='tableGridTd')
+            #set($tabs = "")
+            #if(${config.merged}==false)
+                #set($tabs = "td")
+            #end
+        #end
+        #if(${config.pc}==true)
+            #if(${isEnd}=='0')
+                #if(${projectKey}=='tableGrid')
+                <${tableGrid} class="table-grid-box" :style='{"--borderType":"${borderType}","--borderColor":"${borderColor}","--borderWidth":"${borderWidth}px"}'>
+                #end
+                #if($tabs)
+                <${tabs}#if(${config.colspan}) colspan="${config.colspan}"#end#if(${config.rowspan}) rowspan="${config.rowspan}"#end
+                    #if($!{config.backgroundColor}) :style="{ '--backgroundColor': '${config.backgroundColor}' }"#end>
+                #end
+            #else
+                #if($tabs)
+                </${tabs}>
+                #end
+                #if(${projectKey}=='tableGrid')
+                </${tableGrid}>
+                #end
+            #end
+        #end
+    #elseif(${projectKey}=='collapse' && $pcshow == true)
+        #set($collapse = "a-collapse")
+        #if(${outermost}=='1')
+            #set($collapse = "a-collapse-panel")
+        #end
+        #if(${isEnd}=='0')
+            #if(${outermost}=='0')
+            <a-col :span="${formModel.span}" class="ant-col-item">
+                <${collapse} ghost expandIconPosition="right"  :accordion="${formModel.accordion}" v-model:activeKey="state.${formModel.model}" class="mb-20">
+            #else
+                <${collapse} header="${formModel.title}" key="${formModel.name}" forceRender>
+            #end
+        #else
+            #if(${outermost}=='0')
+            </${collapse}>
+            </a-col>
+            #else
+            </${collapse}>
+            #end
+        #end
+    #elseif(${projectKey}=='groupTitle' || ${projectKey}=='text'|| ${projectKey} == 'button' || ${projectKey} == 'link' || ${projectKey} == 'alert'|| ${projectKey} == 'divider')
+        #if($pcshow== true)
+        <a-col :span="${span}" class="ant-col-item">
+            <a-form-item>
+                <${config.tag}
+                #if($formModel.style) :style='${formModel.style}'#end
+                #if($formModel.href) href = "$formModel.href"#end
+                #if($formModel.target) target = "$formModel.target"#end
+                #if($formModel.showIcon) :show-icon= "$formModel.showIcon"#end
+                #if($formModel.align) align="${formModel.align}" #end
+                #if($formModel.disabled) :disabled="${formModel.disabled}" #end
+                #if($formModel.buttonText)  buttonText="${formModel.buttonText}"#end
+                #if($formModel.type) type="${formModel.type}" #end
+                #if($formModel.textStyle) :textStyle='${formModel.textStyle}'#end
+                #if($formModel.contentPosition) contentPosition="${formModel.contentPosition}" #end
+                #if(${projectKey} == 'alert' && $!{formModel.closable}) :closable= "$formModel.closable" #end
+                #if($formModel.title) title ="${formModel.title}" #end
+                #if($formModel.closeText) closeText ="${formModel.closeText}" #end
+                #if($formModel.description) description ="${formModel.description}" #end
+                #if($formModel.helpMessage) helpMessage ="${formModel.helpMessage}" #end
+                #if($formModel.content) content ="$formModel.content" #end>
+            </${config.tag}>
+            </a-form-item>
+        </a-col>
+        #end
+    #elseif(${projectKey}=='mast' || ${projectKey}=='mastTable')
+        #EachItemRender(${projectKey})
+    #elseif($projectKey == 'table')
+        #CreateChildTable()
+    #end
+#end
+#end
+##  编辑-主表副表-字段渲染
+#macro(EachItemRender $tableType)
+    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+    #set($beforeVmodel =${html.vModel})
+##    副表参数
+    #if($tableType=='mastTable')
+        #set($html = $fieLdsModel.formMastTableModel.mastTable.fieLdsModel)
+        #set($beforeVmodel =${fieLdsModel.formMastTableModel.vModel})
+    #end
+    #set($vModel = "${html.vModel}")
+    #set($mastModel="${context.formModel}.${beforeVmodel}")
+    #set($config = $html.config)
+    #set($mastKey = "${config.projectKey}")
+    #set($show = $config.noShow)
+    #set($pcshow = $config.pc)
+    #set($startTime=${html.startTime})
+    #set($endTime=${html.endTime})
+##    时间处理
+    #if(${mastKey}=='datePicker'||${mastKey}=='timePicker')
+        #GetStartAndEndTime($mastKey,$config,$html,$startTime,$endTime)
+    #end
+    #if($show == false && $pcshow == true)
+    <a-col :span="${config.span}" class="ant-col-item" #if($context.isFlow)  #if(${vModel})  v-if="judgeShow('${beforeVmodel}')"
+            #elseif($mastKey == 'relationFormAttr' || $mastKey == 'popupAttr') v-if="judgeShow('${html.relationField}')" #end
+        #elseif(${context.columnData.useFormPermission}) #if(${vModel}) v-if="hasFormP('${beforeVmodel}')"
+            #elseif($mastKey == 'relationFormAttr' || $mastKey == 'popupAttr') v-if="hasFormP('${html.relationField}')" #end  #end >
+        <a-form-item #if($config.showLabel == true)  #if($config.labelWidth && ${context.labelPosition}!="top") :labelCol="{ style: { width: '${config.labelWidth}px' } }"#end
+        #else :labelCol="{ style: { width: '0px' } }"#end #if($vModel) name="${beforeVmodel}" #end>
+            #if($config.showLabel)<template #label>${config.label}#if(${config.label} && ${context.labelSuffix})${context.labelSuffix}#end#if(${config.label} && $config.tipLabel)<BasicHelp text="${config.tipLabel}" />#end</template> #end
+            #CreateFieldTag($mastKey,$html,$config,$mastModel,$beforeVmodel,-1,true)
+        </a-form-item>
+    </a-col>
+    #end
+#end
+##  编辑-生成字段标签
+#macro(CreateFieldTag $mastKey,$html,$config,$mastModel,$beforeVmodel,$index,$isChangeData)
+<${config.tag}  #if($html.vModel)  v-model:value="${mastModel}" #if($isChangeData) @change="changeData('${beforeVmodel}',${index})" #end #end
+    #if($mastKey!='text')
+        #if($html.placeholder) placeholder="${html.placeholder}" #end
+    #end
+    #if($mastKey =='popupSelect' || $mastKey =='popupTableSelect')
+    #if($index == 'index') :rowIndex="index"#end :formData="${context.formModel}" :templateJson='${html.templateJson}'
+    #end
+    #if($mastKey== 'uploadFile' || $mastKey== 'uploadImg')
+        #if(${html.fileSize}) :fileSize="${html.fileSize}" #end  #end
+    #if($html.maxlength) :maxlength="${html.maxlength}" #end
+    #if($html.readonly == true ) readonly #end
+    #if($context.isFlow)
+        #if($mastKey== 'popupAttr'||$mastKey== 'relationFormAttr')
+            #set($judgeWriteName="${html.relationField}")
+        #else
+            #set($judgeWriteName="${beforeVmodel}")
+        #end
+##      子表，xxxlist-input
+        #if($index == 'index')
+            #if($mastKey== 'popupAttr'||$mastKey== 'relationFormAttr')
+                #set($judgeWriteName= "${aliasname}List-${html.relationField}")
+            #else
+                #set($judgeWriteName= "${aliasname}List-${html.vModel}")
+            #end
+        #end
+    :disabled="judgeWrite('${judgeWriteName}')"
+    #else
+    #if($html.disabled == true ):disabled="${html.disabled}"#end
+    #end
+    #if($!html.clearable || $html.clearable=='false') :allowClear='${html.clearable}' #end
+    #if($html.prefixIcon) prefix-icon='${html.prefixIcon}' #end
+    #if($html.suffixIcon) suffix-icon='${html.suffixIcon}' #end
+    #if($html.style) :style='${html.style}'#end
+    #if($html.showWordLimit == true ) ${html.showWordLimit} #end
+    #if($html.size) size="${html.size}" #end
+    #if($html.min) :min="${html.min}" #end
+    #if($html.max) :max="${html.max}" #end
+    #if($html.count) :count="${html.count}" #end
+    #if($html.type) type="${html.type}" #end
+    #if($html.showLevel) showLevel="${html.showLevel}" #end
+    #if($html.autoSize) :autoSize='${html.autoSize}' #end
+    #if($html.step) :step="${html.step}" #end
+    #if($html.precision) :precision="${html.precision}" #end
+    #if($html.stepstrictly==true) stepstrictly #end
+    #if($html.textStyle) :textStyle='${html.textStyle}' #end
+    #if($html.lineHeight) :lineHeight="${html.lineHeight}" #end
+    #if($html.fontSize) :fontSize="${html.fontSize}" #end
+    #if($html.showChinese) :showChinese="${html.showChinese}" #end
+    #if($html.showPassword) show-password #end
+    #if($html.filterable || $html.filterable=='false') :showSearch='${html.filterable}' #end
+    #if($html.multiple) :multiple="${html.multiple}" #end
+    #if($html.separator) separator="${html.separator}" #end
+    #if($html.isrange==true) is-range #end
+    #if($html.rangeseparator) range-separator="${html.rangeseparator}" #end
+    #if($html.startplaceholder) start-placeholder="${html.startplaceholder}" #end
+    #if($html.endplaceholder) end-placeholder="${html.endplaceholder}" #end
+    #if($html.format) format="${html.format}" #end
+    #if($html.colorformat) color-format="${html.colorformat}" #end
+    #if($html.valueformat) value-format="${html.valueformat}" #end
+    #if($!html.activecolor) active-color="${html.activecolor}" #end
+    #if($!html.inactivecolor) inactive-color="${html.inactivecolor}" #end
+    #if($!html.activevalue) :checkedValue="${html.activevalue}" #end
+    #if($!html.inactivevalue) :unCheckedValue="${html.inactivevalue}" #end
+##    #if($!html.activeTxt) checkedChildren="${html.activeTxt}" #end
+##    #if($!html.inactiveTxt) unCheckedChildren="${html.inactiveTxt}" #end
+    #if($html.showScore == true ) show-score #end
+    #if($html.showText == true ) show-text #end
+    #if($html.allowhalf == true ) allow-half #end
+    #if($html.showAlpha == true ) show-alpha #end
+    #if($html.showStops == true ) show-stops #end
+    #if($html.range == true ) range #end
+    #if($html.showTip == true ) :showTip="${html.showTip}" #end
+    #if($html.accept) accept="${html.accept}" #end
+    #if($html.sizeUnit) sizeUnit="${html.sizeUnit}" #end
+    #if($html.limit) :limit="${html.limit}" #end
+    #if($html.pathType) pathType="${html.pathType}" #end
+    #if($html.isAccount) :isAccount="${html.isAccount}" #end
+    #if($html.folder) folder="${html.folder}" #end
+    #if($html.buttonText) buttonText="${html.buttonText}" #end
+    #if($html.contentposition) content-position="${html.contentposition}" #end
+    #if($!html.level || $html.level=='0') :level=${html.level} #end
+    #if($html.isAmountChinese) isAmountChinese #end
+    #if($html.thousands) thousands #end
+    #if($html.addonAfter) addonAfter="${html.addonAfter}" #end
+    #if($html.addonBefore) addonBefore="${html.addonBefore}" #end
+    #if($html.controls) :controls="${html.controls}" #end
+    #if($startTime) :startTime="${startTime}" #end
+    #if($endTime) :endTime="${endTime}" #end
+    #if($html.tipText) tipText="${html.tipText}" #end
+    #if($html.href) href = "$html.href"#end
+    #if($html.height) :height = "$html.height"#end
+    #if($html.useMask) :useMask = "${html.useMask}"#end
+    #if($html.maskConfig) :maskConfig = "maskConfig.${beforeVmodel}"#end
+    #if($html.autoLocation) :autoLocation = "$html.autoLocation" #end
+    #if($html.enableLocationScope) :enableLocationScope = "$html.enableLocationScope" #end
+    #if($html.adjustmentScope) :adjustmentScope = "$html.adjustmentScope" #end
+    #if($html.enableDesktopLocation) :enableDesktopLocation = "$html.enableDesktopLocation" #end
+    #if($html.locationScope) :locationScope = "state.locationScope.${beforeVmodel}" #end
+    #if($html.borderType) borderType = "$html.borderType" #end
+    #if($html.borderColor) borderColor = "$html.borderColor" #end
+    #if($html.borderWidth) :borderWidth = "$html.borderWidth" #end
+    #if($mastKey == 'relationFormAttr' || $mastKey == 'popupAttr')
+        #set($lineEidtRelationField = $html.relationField)
+##        行内格式是guanlianbiaodan_linzenTable_test_salesordecopy_copy11==刚好没有子表删除表格
+        #if($html.relationField && $html.relationField.contains("_linzenTable_"))
+            #if($html.relationField.contains("$config.tableName"))
+##              主表
+                #set($lineEidtRelationField = $html.relationField.split("_linzenTable_")[0])
+            #else
+##              副表
+                #set($lineEidtRelationField = "linzen_"+$config.tableName+"_linzen_"+$html.relationField.split("_linzenTable_")[0])
+            #end
+        #end
+        #if($html.relationField) :relationField=#if(${index}=="index") "'${lineEidtRelationField}'+index" #else "'${lineEidtRelationField}'" #end#end
+        #if($html.showField) showField="${html.showField}" #end
+        #if($html.isStorage) isStorage=${html.isStorage} #end
+    #end
+    #if($html.selectType) selectType="$html.selectType" #end
+    #if($html.selectType == 'custom')
+        #if($html.ableDepIds) :ableDepIds = 'ableAll.${beforeVmodel}ableDepIds' #end
+        #if($html.ablePosIds) :ablePosIds = 'ableAll.${beforeVmodel}ablePosIds' #end
+        #if($html.ableUserIds) :ableUserIds = 'ableAll.${beforeVmodel}ableUserIds' #end
+        #if($html.ableRoleIds) :ableRoleIds = 'ableAll.${beforeVmodel}ableRoleIds' #end
+        #if($html.ableGroupIds) :ableGroupIds = 'ableAll.${beforeVmodel}ableGroupIds' #end
+        #if($html.ableIds) :ableIds = 'ableAll.${beforeVmodel}ableIds' #end
+    #elseif($html.selectType == 'dep' || $html.selectType == 'pos' || $html.selectType == 'role' || $html.selectType == 'group')
+        #set($ableRelationIds="dataForm.${html.relationField}")
+        #if($html.relationChild)
+            #set($ableRelationIds="record.${html.relationField}")
+        #end
+        #if($html.relationField)
+        :ableRelationIds="Array.isArray(${ableRelationIds}) ? ${ableRelationIds} : [${ableRelationIds}]"
+        #end
+    #end
+    #if($mastKey == 'relationForm') :field=#if(${index}=="index")"'${html.vModel}'+index"#else"'${beforeVmodel}'"#end modelId ="${html.modelId}"
+            :columnOptions="optionsObj.${beforeVmodel}columnOptions" relationField="${html.relationField}" popupWidth="${html.popupWidth}"
+            #if($html.hasPage) hasPage :pageSize="$html.pageSize" #end  #end
+    #if($mastKey == 'popupSelect' || $mastKey =='popupTableSelect') :field=#if(${index}=="index")"'${html.vModel}'+index"#else"'${beforeVmodel}'"#end interfaceId="${html.interfaceId}"
+        :columnOptions="optionsObj.${beforeVmodel}columnOptions" propsValue="${html.propsValue}" relationField="${html.relationField}" popupType="${html.popupType}"
+        #if(${html.popupTitle}) popupTitle="${html.popupTitle}" #end popupWidth="${html.popupWidth}" #if($html.hasPage) hasPage :pageSize="$html.pageSize" #end  #end
+    #if($mastKey=='cascader' || $mastKey=='treeSelect' || $mastKey=='checkbox'|| $mastKey=='radio'|| $mastKey=='select')
+        ##有index时说明时子表，子表动态可选值 取当前行内option
+        #if(${index}=="index" && ${config.dataType}=="dynamic"):options="record.${beforeVmodel}Options" #else :options="optionsObj.${beforeVmodel}Options"  #end
+        :fieldNames="optionsObj.${beforeVmodel}Props"
+        #if(${html.direction}) direction="${html.direction}" #end
+        #if(${html.optionType}) optionType="${html.optionType}" #end
+    #end
+    #if($mastKey == 'autoComplete')
+    relationField="${html.relationField}"
+    interfaceId="${html.interfaceId}"
+    :templateJson="state.interfaceRes.${beforeVmodel}"
+    #if(${html.total}) :total="${html.total}" #end
+    #if($index == 'index') :rowIndex="index" #end
+    :formData="${context.formModel}"
+    #end>
+    #if($mastKey!='checkbox' && $mastKey!='radio' && $mastKey!='select')
+        #if($html.slot.prepend)
+        <template slot="prepend">${html.slot.prepend}</template>
+        #end
+        #if($html.slot.append)
+        <template slot="append">${html.slot.append}</template>
+        #end
+    #end
+</${config.tag}>
+#end
+##  编辑-子表生成
+#macro(CreateChildTable)
+#set($child = $fieLdsModel.childList)
+#set($aliasname = "")
+#foreach($children in ${context.children})
+    #if(${children.tableModel}==${child.tableModel})
+        #set($aliasname = "${children.aliasLowName}")
+        #set($aliasName = "${children.aliasUpName}")
+    #end
+#end
+<a-col :span="${child.span}" class="ant-col-item">
+<a-form-item>
+    #if($child.showTitle== true)
+        <LinzenGroupTitle content="${child.label}" :bordered="false" helpMessage="$child.tipLabel" />
+    #end
+<a-table :data-source="dataForm.${aliasname}List"  #if(${child.complexHeaderList.size()}>0) :bordered="true" #end
+         :columns="${aliasname}Columns" size="small" :pagination="false" :scroll="{ x: 'max-content' }"
+         :rowSelection="get${aliasname}RowSelection" :rowKey="(_record, i) => i">
+    <template #headerCell="{ column }">
+        <span class="required-sign" v-if="column.required">*</span>
+        {{ column.title }}
+        <BasicHelp :text="column.tipLabel" v-if="column.tipLabel && column.title" />
+    </template>
+##    子表字段
+<template #bodyCell="{ column, index, record }">
+    <template v-if="column.key === 'index'">{{ index + 1 }}</template>
+    #foreach($itemModel in ${child.childList})
+        #set($fieLdsModel = ${itemModel.fieLdsModel})
+        #set($config = ${fieLdsModel.config})
+        #set($mastKey = "${config.projectKey}")
+        #set($beforeVmodel ="${aliasname}${fieLdsModel.vModel}")
+        #set($mastModel="record.${fieLdsModel.vModel}")
+        #set($startTime=${fieLdsModel.startTime})
+        #set($endTime=${fieLdsModel.endTime})
+        #if(${mastKey}=='datePicker'||${mastKey}=='timePicker')
+            #GetStartAndEndTime($mastKey,$config,$fieLdsModel,$startTime,$endTime)
+        #end
+    <template v-if="column.key === #if($!{fieLdsModel.vModel}) '${fieLdsModel.vModel}' #else '${config.formId}' #end">
+##      子表标签生成
+        #CreateFieldTag($mastKey,$fieLdsModel,$config,$mastModel,$beforeVmodel,'index',true)
+    </template>
+    #end
+##      判断子表行内有几个按键---底下生成子表字段信息时也要使用这个变量
+#set($hasLineBtnNum = 0)
+#foreach($item in $child.columnBtnsList)
+    #if($item.show)
+        #set($hasLineBtnNum = ${hasLineBtnNum} + 50)
+    #end
+#end
+##    子表行操作按键生成
+#if($hasLineBtnNum>0)
+    <template v-if="column.key === 'action'">
+        <a-space>
+    #foreach($item in $child.columnBtnsList)
+        #if(${item.value} == "copy" && ${item.show})
+            <a-button class="action-btn" type="link" @click="copy${aliasName}Row(index)" size="small">${item.label}</a-button>
+        #end
+        #if(${item.value} == "remove" && ${item.show})
+            <a-button class="action-btn" type="link" color="error" @click="remove${aliasName}Row(index,${item.showConfirm})" size="small">${item.label}</a-button>
+        #end
+    #end
+        </a-space>
+    </template>
+#end
+
+</template>
+##    子表合计
+#if($child.showSummary)
+    #set($childSummary=true)
+<template #summary v-if="dataForm.${aliasname}List?.length">
+    <a-table-summary fixed>
+        <a-table-summary-row>
+            <a-table-summary-cell :index="0">合计</a-table-summary-cell>
+            <a-table-summary-cell v-for="(item, index) in get${aliasName}ColumnSum" :key="index" :index="index + 1" :align="get${aliasName}SummaryCellAlign(index)">{{ item }}</a-table-summary-cell>
+            <a-table-summary-cell #if($context.isFlow) v-if="!judgeWrite('${aliasname}List')"#end :index="get${aliasName}ColumnSum.length + 1"></a-table-summary-cell>
+        </a-table-summary-row>
+    </a-table-summary>
+</template>
+#end
+</a-table>
+    #if($child.footerBtnsList.size()>0)
+        #if($child.footerBtnsList.size()>2)#set($isSelectDialog = true) #end
+    <a-space class="input-table-footer-btn"  #if($context.isFlow) v-if="!judgeWrite('${aliasname}List')" #end>
+    #foreach($footerBtn in ${child.footerBtnsList})
+        #set($btnName="openSelectDialog('${child.aliasLowName}List','$!{footerBtn.value}')")
+        #if($footerBtn.value =="add")
+            #set($btnName="add${aliasName}Row")
+        #elseif($footerBtn.value =="batchRemove")
+            #set($btnName="batchRemove${aliasName}Row($!{footerBtn.showConfirm})")
+        #end
+        #if($footerBtn.show)
+        <a-button type =#if(${footerBtn.btnType} == 'text')'link'#else'${footerBtn.btnType}'#end preIcon="${footerBtn.btnIcon}"
+            @click="$btnName">${footerBtn.label}</a-button>
+        #end
+    #end
+    </a-space>
+    #end
+</a-form-item>
+</a-col>
+#end
+##  子表字段对象列表生成
+#macro(GetChildTableColumns)
+##  子表列表字段属性
+    #foreach($itemModel in ${context.children})
+        #set($itemChildHasBatch = false)
+        #foreach($itemBtn in ${itemModel.footerBtnsList})
+            #if(${itemBtn.value} == 'batchRemove')
+                #set($itemChildHasBatch = true)
+            #end
+        #end
+    const ${itemModel.aliasLowName}Columns: any[] = computed(() => {
+        let list = [
+            #set($childList = ${itemModel.childList})
+            #foreach($html in ${childList})
+                #set($fieLdsModel = ${html.fieLdsModel})
+                #set($config = ${fieLdsModel.config})
+        #if($context.isFlow || !${config.noShow})
+        {
+            title: '${config.label}',
+            dataIndex: #if($!{fieLdsModel.vModel}) '${fieLdsModel.vModel}' #else '${config.formId}' #end,
+            key: #if($!{fieLdsModel.vModel}) '${fieLdsModel.vModel}' #else '${config.formId}' #end,
+            #if($!{config.columnWidth})
+            width: $!{config.columnWidth},
+            #end
+            tipLabel: #if($!{config.tipLabel}) "${config.tipLabel}" #else '' #end,
+            #set($vModelRequired="#if($!{fieLdsModel.vModel})${itemModel.aliasLowName}List-${fieLdsModel.vModel}#else${itemModel.aliasLowName}List-${config.formId}#end")
+            required: #if($context.isFlow)judgeRequired('$vModelRequired'), #else ${config.required},#end
+            #if($!{fieLdsModel.thousands}==true)
+            thousands: ${fieLdsModel.thousands},
+            #end
+            align: #if($!{config.tableAlign}) '$!{config.tableAlign}'#else 'left'#end ,
+            fixed: #if($!{config.tableFixed} == 'left' || $!{config.tableFixed} == 'right') '$!{config.tableFixed}' #else false #end,
+        },
+        #end
+            #end
+        ];
+##子表行内按键操作字段判断是否生成。及其宽度
+    #if($context.isFlow)
+        list = list.filter(o => judgeShow('${itemModel.tableModel}-' + o.dataIndex));
+        #if($hasLineBtnNum>0)
+        if (!judgeWrite('${itemModel.aliasLowName}List')) {
+            list.push({ title: '操作', showLabel: true, dataIndex: 'action', key: 'action', align: 'center', fixed: 'right', width: $hasLineBtnNum });
+        }
+        #end
+    #else
+        #if(${context.columnData.useFormPermission})list = list.filter(o => hasFormP('${itemModel.tableModel}-' + o.dataIndex)); #end
+        #if($hasLineBtnNum>0)list.push({ title: '操作', showLabel: true, dataIndex: 'action', key: 'action', align: 'center', fixed: 'right', width: $hasLineBtnNum });#end
+    #end
+        const indexColumn = { title: '序号', showLabel: true, dataIndex: 'index', key: 'index', align: 'center', fixed: 'left', width: 50 };
+        //子表复杂表头-处理
+        let columnList = list;
+        let complexHeaderList: any[] = #if(${itemModel.complexHeaderList}) ${itemModel.complexHeaderList}; #else []; #end
+        if (complexHeaderList.length) {
+            let childColumns: any[] = [];
+            for (let i = 0; i < complexHeaderList.length; i++) {
+                const e = complexHeaderList[i];
+                e.title = e.fullName;
+                e.align = e.align;
+                e.children = [];
+                e.projectKey = 'complexHeader';
+                if (e.childColumns?.length) {
+                    childColumns.push(...e.childColumns);
+                    for (let j = 0; j < list.length; j++) {
+                        const o = list[j];
+                        if (e.childColumns.includes(o.key) && o.fixed !== 'left' && o.fixed !== 'right')
+                        e.children.push({ ...toRaw(o) });
+                    }
+                }
+            }
+            complexHeaderList = complexHeaderList.filter(o => o.children.length);
+            for (let i = 0; i < list.length; i++) {
+                const item = list[i];
+                if (!childColumns.includes(item.key) || item.fixed === 'left' || item.fixed === 'right')
+                complexHeaderList.push(item);
+            }
+            columnList = complexHeaderList;
+        }
+        let columns =  [indexColumn, ...columnList]
+        const leftFixedList = columns.filter(o => o.fixed === 'left');
+        const rightFixedList = columns.filter(o => o.fixed === 'right');
+        const noFixedList = columns.filter(o => o.fixed !== 'left' && o.fixed !== 'right');
+        return [...leftFixedList, ...noFixedList, ...rightFixedList];
+    });
+
+##   子表选择框是否展示
+    const get${itemModel.aliasLowName}HasBatchBtn = computed(() =>{
+        let flist:any[] = #if(${itemModel.footerBtnsList})${itemModel.footerBtnsList}#else []  #end
+        return flist?.length && flist.some(o => o.value == 'batchRemove' && !!o.show)
+    });
+
+    const get${itemModel.aliasLowName}RowSelection = computed(() => {
+        if (!unref(get${itemModel.aliasLowName}HasBatchBtn )) return undefined;
+        const rowSelection = {
+            selectedRowKeys: state.selected${itemModel.aliasLowName}RowKeys,
+            onChange: (selectedRowKeys: string[]) => {
+                state.selected${itemModel.aliasLowName}RowKeys = (selectedRowKeys || []).sort().reverse();
+            },
+        };
+        return rowSelection;
+    });
+
+##  子表合计参数
+    #if($itemModel.showSummary)
+    //子表合计字段
+    const ${itemModel.aliasLowName}SummaryColumn = computed(() => {
+        let defaultColumns = unref(${itemModel.aliasLowName}Columns);//子表字段
+        let columns: any[] = [];
+        for (let i = 0; i < defaultColumns.length; i++) {
+            const e = defaultColumns[i];
+            if (e.projectKey === 'table' || e.projectKey === 'complexHeader') {
+                if (e.children?.length)  columns.push(...e.children);
+            } else {
+                columns.push(e);
+            }
+            if (e.fixed && e.children?.length) {
+                for (let j = 0; j < e.children.length; j++) {
+                    e.children[j].fixed = e.fixed;
+                }
+            }
+        }
+        return columns.filter(o => o?.key != 'index' && o?.key != 'action');
+    });
+    //合计方法
+    const get${itemModel.aliasUpName}ColumnSum = computed(() => {
+        const sums: any[] = [];
+        const summaryField: any[] = #if(${itemModel.summaryField}) ${itemModel.summaryField} #else [] #end;
+        const useThousands = key => unref(${itemModel.aliasLowName}SummaryColumn).some(o => o.key === key && o.thousands);
+        const isSummary = key => summaryField.includes(key);
+        const list = unref(${itemModel.aliasLowName}SummaryColumn).filter(o => o.key !== 'index' && o.key !== 'action');
+        list.forEach((column, index) => {
+            let sumVal = state.dataForm.${itemModel.aliasLowName}List.reduce((sum, d) => sum + Number(getCmpValOfRow(d, column.key, summaryField || [])), 0);
+            if (!isSummary(column.key)) sumVal = '';
+            sumVal = Number.isNaN(sumVal) ? '' : sumVal;
+            const realVal = sumVal && !Number.isInteger(Number(sumVal)) ? Number(sumVal).toFixed(2) : sumVal;
+            sums[index] = useThousands(column.key) ? thousandsFormat(realVal) : realVal;
+        });
+        if (unref(get${itemModel.aliasLowName}HasBatchBtn )) sums.unshift('');
+        return sums;
+    });
+    //合计对齐
+    function get${itemModel.aliasUpName}SummaryCellAlign(index) {
+        if (!unref(${itemModel.aliasLowName}SummaryColumn).length) return;
+        if ($itemChildHasBatch) index--;
+        return unref(${itemModel.aliasLowName}SummaryColumn)[index]?.align || 'left';
+    }
+    #end
+    #end
+#end
+##  子表方法生成
+#macro(CreateChildTableMethod)
+    #foreach($itemModel in ${context.children})
+        #set($aliasname =$!{itemModel.aliasLowName})
+        #set($aliasName =$!{itemModel.aliasUpName})
+        #set($childList = ${itemModel.childList})
+## 子表非弹窗生成添加方法
+    function add${aliasName}Row(){
+        let item = {
+            #foreach($html in $childList)
+                #set($fieLdsModel = ${html.fieLdsModel})
+                #set($vModel = "${html.fieLdsModel.vModel}")
+                #set($config = ${html.fieLdsModel.config})
+                #set($jk = $html.fieLdsModel.config.projectKey)
+                #set($dataType = "$!{config.dataType}")
+                #set($defaultCurrent = $html.fieLdsModel.config.defaultCurrent)
+                #set($defult = $html.fieLdsModel.config.defaultValue)
+                #set($format = $html.fieLdsModel.format)
+                #if($vModel)
+                    #GetFeildDefaultValue($!{aliasname})
+                #end
+            #end
+        }
+        state.dataForm.${aliasname}List.push(item)
+        state.childIndex=state.dataForm.${aliasname}List.length-1
+            #foreach($childList in$childList)
+                #set($fieLdsModel = $childList.fieLdsModel)
+                #set($vModel = "${fieLdsModel.vModel}")
+                #set($field = "${fieLdsModel.vModel}")
+                #set($config = ${fieLdsModel.config})
+                #set($dataType = "$!{config.dataType}")
+                #if(${dataType}=='dynamic')
+                get${aliasname}${vModel}Options()
+                #end
+            #end
+        state.childIndex = -1
+    }
+
+    function remove${aliasName}Row(index,showConfirm=false){
+        if(showConfirm){
+            createConfirm({
+                iconType: 'warning',
+                title: '提示',
+                content: '此操作将永久删除该数据, 是否继续?',
+                onOk: () => {
+                    state.dataForm.${aliasname}List.splice(index, 1);
+                },
+            });
+        }else{
+            state.dataForm.${aliasname}List.splice(index, 1);
+        }
+    }
+
+    function copy${aliasName}Row(index){
+        let item = cloneDeep(state.dataForm.${aliasname}List[index]);
+        let copyData = {};
+        for (let i = 0; i < unref(${aliasname}Columns).length; i++) {
+            const cur = unref(${aliasname}Columns)[i];
+            if (cur.key != 'index' && cur.key != 'action') {
+                if (cur.children?.length && cur.projectKey == 'complexHeader') {
+                    for (let j = 0; j < cur.children.length; j++) {
+                        copyData[cur.children[j].key] = item[cur.children[j].key];
+                    }
+                } else {
+                    copyData[cur.key] = item[cur.key];
+                }
+            }
+        }
+        state.dataForm.${aliasname}List.push(copyData);
+    }
+
+    function batchRemove${aliasName}Row(showConfirm=false){
+        if (!state.selected${aliasname}RowKeys.length) return createMessage.error('请选择一条数据');
+        const handleRemove = ()=>{
+            state.selected${aliasname}RowKeys.map(o => {
+                state.dataForm.${aliasname}List.splice(o, 1);
+            });
+            nextTick(() => {
+                state.selected${aliasname}RowKeys = [];
+            });
+         }
+        if(showConfirm){
+            createConfirm({
+                iconType: 'warning',
+                title: '提示',
+                content: '此操作将永久删除该数据, 是否继续?',
+                onOk: ()=>{
+                    handleRemove()
+                },
+            });
+        }else{
+            handleRemove()
+        }
+    }
+
+##  非流程的子表必填验证方法
+    #if(!$context.isFlow)
+    function ${aliasname}Exist(){
+        let isOk = true;
+        for(let i=0;i<state.dataForm.${aliasname}List.length;i++){
+            const e = state.dataForm.${aliasname}List[i];
+    #foreach($childListAll in ${itemModel.childList})
+            #set($html = $childListAll.fieLdsModel)
+            #set($model = "${html.vModel}")
+            #set($config = ${html.config})
+            #set($projectKey = "${config.projectKey}")
+            #set($takeEnd = true)
+            #set($req = $config.required)
+            #set($regular = ${config.regList})
+            #if(${model} && ${req}==true  && !${DonotJudgeNull.contains(${projectKey})})
+                #if(${projectKey}=='cascader'||${projectKey}=='checkbox' || ${projectKey}=='areaSelect'|| ${projectKey} == 'organizeSelect' ||
+                    ${projectKey}=='uploadImg'||${projectKey}=='uploadFile' || ${projectKey}=='timeRange' || ${projectKey}=='dateRange')
+                if (!e.${model}.length) {
+                #elseif(${projectKey}=='select' || ${projectKey}=='userSelect'|| ${projectKey}=='depSelect' || ${projectKey}=='posSelect' ||
+                    ${projectKey}=='treeSelect'|| ${projectKey}=='roleSelect'|| ${control}=='groupSelect'|| ${control}=='popupTableSelect')
+                    #if(${html.multiple}=='true')
+                if (!e.${model}.length) {
+                    #else
+                if (!e.${model}) {
+                    #end
+                #elseif(${control}!='switch')
+                if (!e.${model}) {
+                #else
+                    #set($takeEnd = false)
+                #end
+                    createMessage.error('${config.label}不能为空');
+                    isOk = false;
+                    break;
+                #if($takeEnd == true)
+                }
+                #end
+            #end
+            #if(${model} && ${regular})
+            if (e.${model}) {
+                var regPos = ${regular}
+                for (let i = 0; i < regPos.length; i++) {
+                    const element = regPos[i];
+                    if (element.pattern && !eval(element.pattern).test(e.${model})) {
+                        createMessage.error(element.message);
+                        isOk = false;
+                        break;
+                    }
+                }
+            }
+            #end
+        #end
+        }
+        return isOk;
+    }
+    #end
+    #end
+#end
+##  dataform属性生成
+#macro(CreateDataform)
+#foreach($fieLdsModel in ${context.fields})
+    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+    #set($fieLdsModel =$fieLdsModel.formColumnModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #if($vModel !='')
+        #set($config = $html.config)
+        #set($jk = $html.config.projectKey)
+        #set($dataType = "$!{config.dataType}")
+        #set($defaultCurrent = $config.defaultCurrent)
+        #set($defult = $config.defaultValue)
+        #set($format = $html.format)
+        #if($jk!='text' && $jk!='divider')
+            #GetFeildDefaultValue("")
+        #end
+    #end
+#end
+#foreach($mast in ${context.mastTable})
+    #set($mastField = $mast.formMastTableModel.mastTable.fieLdsModel)
+    #set($fieLdsModel = $mast.formMastTableModel.mastTable.fieLdsModel)
+    #set($config =$mastField.config)
+    #set($jk = ${config.projectKey})
+    #set($vModel = ${mast.formMastTableModel.vModel})
+    #set($dataType = "$!{config.dataType}")
+    #set($defaultCurrent = $config.defaultCurrent)
+    #set($defult = $config.defaultValue)
+    #set($format = $mastField.format)
+    #if($jk!='text' && $jk!='divider')
+        #GetFeildDefaultValue("")
+    #end
+#end
+#foreach($child in ${context.children})
+    #set($aliasname = "")
+    #foreach($children in ${context.children})
+        #if(${children.tableModel}==${child.tableModel})
+            #set($aliasname = "${children.aliasLowName}")
+        #end
+    #end
+    ${aliasname}List:[],
+#end
+#if($context.version)
+version: 0,
+#end
+#end
+##  字段-默认值取值方法
+#macro(GetFeildDefaultValue $aliasLowName)
+    #set($multiple=${fieLdsModel.multiple})
+    #set($selectType=${fieLdsModel.selectType})
+    #if(${jk}=='datePicker' && ${defaultCurrent} == true)
+        ${vModel}:dayjs().startOf(getDateTimeUnit('${format}')).valueOf(),
+    #elseif($jk=='timePicker')
+        #if(${defaultCurrent} == true)
+        ${vModel}:dayjs().format('${format}'),
+        #else
+        ${vModel}:'$!{defult}',
+        #end
+    #elseif(${jk}=='areaSelect' && ${defult} =='[]')
+        ${vModel}:[],
+    #elseif(${jk}=='depSelect' && ${defaultCurrent} == true)
+        #if($multiple == true)
+            ${vModel}: userInfo.departmentId?[userInfo.departmentId]:[],
+        #else
+            ${vModel}: userInfo.departmentId?userInfo.departmentId:'',
+        #end
+    #elseif(${jk}=='organizeSelect' && ${defaultCurrent} == true)
+        #if($multiple == true)
+            ${vModel}: userInfo.organizeIdList?[userInfo.organizeIdList]:[],
+        #else
+            ${vModel}: userInfo.organizeIdList?userInfo.organizeIdList:'',
+        #end
+    #elseif((${jk}=='userSelect' || ${jk}=='usersSelect') && ${defaultCurrent} == true)
+        #if($multiple == true)
+            ${vModel}: userInfo.userId?[userInfo.userId]:[],
+        #else
+            ${vModel}: userInfo.userId?userInfo.userId:'',
+        #end
+    #elseif(${jk}=='posSelect' && ${defaultCurrent} == true)
+        #if($multiple == true)
+            ${vModel}: userInfo.positionIds.length?userInfo.positionIds.map(o => o.id):[],
+        #else
+            ${vModel}: userInfo.positionIds.length?userInfo.positionIds[0].id:'',
+        #end
+    #elseif(${jk}=='roleSelect' && ${defaultCurrent} == true)
+        #if($multiple == true)
+            ${vModel}: userInfo.roleIds.length?userInfo.roleIds:[],
+        #else
+            ${vModel}: userInfo.roleIds.length?userInfo.roleIds[0]:'',
+        #end
+    #elseif(${jk}=='groupSelect' && ${defaultCurrent} == true)
+        #if($multiple == true)
+            ${vModel}: userInfo.groupIds.length?userInfo.groupIds:[],
+        #else
+            ${vModel}: userInfo.groupIds.length?userInfo.groupIds[0]:'',
+        #end
+    #elseif(${jk}=='sign' && ${defaultCurrent} == true)
+        ${vModel}: userInfo.signImg?userInfo.signImg: #if(${defult}) ${defult} #else '' #end,
+    #elseif(${defult} == "")
+        ${vModel}:'',
+    #elseif(${defult} =='[]')
+        ${vModel}:[],
+    #elseif(${defult} || ${defult}=='0')
+        #if(${jk}=='input' || ${jk}=='colorPicker'|| ${jk}=='editor'|| ${jk}=='radio'|| ${jk}=='textarea'
+        || ${jk}=='popupSelect' || ${jk}=='popupAttr' || ${jk}=='relationForm' || ${jk}=='relationFormAttr' || ${jk}=='sign' || ${jk}=='location'
+        || ${dataType}=='static' || ${dataType}=='dictionary')
+        ${vModel}:'$!{defult}',
+        #else
+        ${vModel}:${defult},
+        #end
+    #else
+        ${vModel}:undefined,
+    #end
+    #if(${dataType}=='dynamic' && $!{aliasLowName})
+        $!{aliasLowName}${vModel}Options:[],
+    #elseif((${dataType}=='static'  || ${dataType}=='dictionary') && $!{aliasLowName})
+        $!{aliasLowName}${vModel}Options:state.optionsObj.$!{aliasLowName}${vModel}Options,
+    #end
+#end
+##  生成表单参数  -interface State  值any  const state 值类型
+#macro(createStateParam $any)
+dataForm: #if($any) $any; #else
+{
+    #CreateDataform()
+},
+#end
+tableRows:#if($any) $any; #else
+{
+    #foreach($child in ${context.children})
+        #set($aliasname = "")
+        #foreach($children in ${context.children})
+            #if(${children.tableModel}==${child.tableModel})
+                #set($aliasname = "${children.aliasLowName}")
+            #end
+        #end
+        ${aliasname}List:{
+        #foreach($childListAll in ${child.childList})
+            #set($html = $childListAll.fieLdsModel)
+            #set($model = "${html.vModel}")
+            #set($config = ${html.config})
+            #set($projectKey = "${config.projectKey}")
+            #if($model)
+                #if(${projectKey}=='cascader'||${projectKey}=='checkbox' || ${projectKey}=='areaSelect')
+                    ${model} : [],
+                #elseif(${projectKey}=='select' || ${projectKey}=='userSelect' || ${projectKey}=='depSelect' || ${projectKey}=='posSelect' || ${projectKey}=='treeSelect')
+                #if(${html.multiple}=='true')
+                    ${model} : [],
+                #else
+                    ${model} : '',
+                #end
+                #elseif(${projectKey} == 'organizeSelect')
+                    ${model} : [],
+                #elseif(${projectKey}=='uploadImg'||${projectKey}=='uploadFile' || ${projectKey}=='timeRange' || ${projectKey}=='dateRange')
+                    ${model} : [],
+                #elseif(${projectKey}=='switch'||${projectKey}=='slider'||${projectKey}=='rate')
+                    ${model} : 0,
+                #elseif(${projectKey}=='inputNumber'||${projectKey}=='calculate')
+                    ${model} : undefined,
+                #else
+                    ${model} : '',
+                #end
+            #end
+        #end
+    enabledmark:undefined
+    },
+    #end
+},
+#end
+dataRule: #if($any) $any; #else
+{
+    #foreach($fieLdsModel in ${context.fields})
+        #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+        #set($vModel = "${html.vModel}")
+        #set($config = $html.config)
+        #set($mastKey = "${config.projectKey}")
+        #set($listSize=$!{config.regList})
+        #set($defaultValue=${config.defaultValue})
+        #set($defaultValueSize=$!{config.defaultValue})
+        #set($trigger = ${config.trigger})
+        #if(${trigger.substring(0,1)}!='[')
+            #set($trigger = "'"+ ${config.trigger}+ "'")
+        #end
+        #if($mastKey!='text' && $mastKey!='divider')
+            #if($multipleUnit.contains($mastKey))
+                #set($messages='请至少选择一个')
+            #else
+                #set($messages='不能为空')
+            #end
+            #if($config.required==true || (${listSize} && $listSize.size()>0))
+                ${vModel}: [
+                #if($config.required==true)
+                {
+                required: true,
+                message: '$!{messages}',
+                trigger: ${trigger}
+                },
+                #end
+                #if($listSize.size()>0)
+                    #foreach($regList in ${config.regList})
+                    {
+                    pattern: ${regList.pattern},
+                    message: '${regList.message}',
+                    trigger: ${trigger}
+                    },
+                    #end
+                #end
+            ],
+            #end
+        #end
+    #end
+    #foreach($ChildField in ${context.columnChildren})
+        #foreach($FormMastTableModel in ${ChildField.fieLdsModelList})
+            #set($html = ${FormMastTableModel.mastTable.fieLdsModel})
+            #set($vModel = "${html.vModel}")
+            #set($config = $html.config)
+            #set($mastKey = "${config.projectKey}")
+            #set($listSize=$!{config.regList})
+            #set($defaultValue=${config.defaultValue})
+            #set($defaultValueSize=$!{config.defaultValue})
+            #set($trigger = ${config.trigger})
+            #if(${trigger.substring(0,1)}!='[')
+                #set($trigger = "'"+ ${config.trigger}+ "'")
+            #end
+            #if($mastKey!='text' && $mastKey!='divider' && $mastKey!='switch')
+                #if($multipleUnit.contains($mastKey))
+                    #set($messages='请至少选择一个')
+                #else
+                    #set($messages='不能为空')
+                #end
+                #if($config.required==true|| (${listSize} && $listSize.size()>0))
+                    ${FormMastTableModel.vModel}: [
+                    #if($config.required==true)
+                    {
+                    required: true,
+                    message: '$!{messages}',
+                    trigger: ${trigger}
+                    },
+                    #end
+                    #if($listSize.size()>0)
+                        #foreach($regList in ${config.regList})
+                        {
+                        pattern: ${regList.pattern},
+                        message: '${regList.message}',
+                        trigger: ${trigger}
+                        },
+                        #end
+                    #end
+                ],
+                #end
+            #end
+        #end
+    #end
+},
+#end
+optionsObj:#if($any) $any; #else
+{
+    #foreach($fieLdsModel in ${context.fields})
+        #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+        #set($vModel = "${html.vModel}")
+        #set($config = $html.config)
+        #set($linzenkey = $config.projectKey)
+        #if($!{config.dataType}=='dictionary'||$!{config.dataType}=='dynamic')
+            ${vModel}Options:[],
+        #elseif($!{config.dataType} == "static")
+            #if($html.slot.options)
+                ${vModel}Options:${html.slot.options},
+            #elseif($html.options)
+                ${vModel}Options:${html.options},
+            #end
+        #end
+        #if($linzenkey == "relationForm" || $linzenkey == "popupSelect" || $linzenkey== "popupTableSelect")
+            ${vModel}columnOptions:[#foreach($options in ${html.columnOptions}) {"label":"${options.label}","value":"${options.value}"},#end],
+        #end
+        #if($html.props)
+            #set($propsModel = ${html.props})
+            $!{vModel}Props:{"label":"${propsModel.label}","value":"${propsModel.value}" #if($!{propsModel.multiple}) ,"multiple":$propsModel.multiple #end #if($!{propsModel.children}),"children":"${propsModel.children}" #end},
+        #end
+    #end
+    #foreach($child in ${context.children})
+        #set($aliasname = "${child.aliasLowName}")
+        #foreach($fieLdsModel in ${child.childList})
+            #set($html = $fieLdsModel.fieLdsModel)
+            #set($vModel = "${html.vModel}")
+            #set($config = $html.config)
+            #set($linzenkey = $config.projectKey)
+            #if($!{config.dataType}=='dictionary'||$!{config.dataType}=='dynamic')
+                ${aliasname}${vModel}Options:[],
+            #elseif($!{config.dataType} == "static")
+                #if($html.slot.options)
+                    ${aliasname}${vModel}Options:${html.slot.options},
+                #elseif($html.options)
+                    ${aliasname}${vModel}Options:${html.options},
+                #end
+            #end
+            #if($linzenkey == "relationForm" || $linzenkey == "popupSelect" || $linzenkey == "popupTableSelect")
+                ${aliasname}${vModel}columnOptions:[#foreach($options in ${html.columnOptions}) {"label":"${options.label}","value":"${options.value}"},#end],
+            #end
+            #if($html.props)
+                #set($propsModel = ${html.props})
+                ${aliasname}$!{vModel}Props:{"label":"${propsModel.label}","value":"${propsModel.value}" #if($!{propsModel.multiple}) ,"multiple":$propsModel.multiple #end #if($!{propsModel.children}),"children":"${propsModel.children}" #end},
+            #end
+        #end
+    #end
+    #foreach($ChildField in ${context.columnChildren})
+        #foreach($FormMastTableModel in ${ChildField.fieLdsModelList})
+            #set($html = ${FormMastTableModel.mastTable.fieLdsModel})
+            #set($projectKey = ${html.config.projectKey})
+            #set($ChildVmodel =${FormMastTableModel.vModel})
+            #set($ClDataType = ${html.config.dataType})
+            #if(${ClDataType}=='dictionary'||${ClDataType}=='dynamic')
+                ${ChildVmodel}Options:[],
+            #elseif(${ClDataType} == "static")
+                #if($html.slot.options)
+                    ${ChildVmodel}Options:${html.slot.options},
+                #elseif($html.options)
+                    ${ChildVmodel}Options:${html.options},
+                #end
+            #end
+            #if(${projectKey} == "relationForm" || ${projectKey} == "popupSelect" || $projectKey == "popupTableSelect")
+                ${ChildVmodel}columnOptions:[#foreach($options in ${html.columnOptions}) {"label":"${options.label}","value":"${options.value}"},#end],
+            #end
+            #if($html.props)
+                #set($propsModel = ${html.props})
+                $!{ChildVmodel}Props:{"label":"${propsModel.label}","value":"${propsModel.value}" #if($!{propsModel.multiple}) ,"multiple":$propsModel.multiple #end #if($!{propsModel.children}),"children":"${propsModel.children}" #end},
+            #end
+        #end
+    #end
+},
+#end
+childIndex:#if($any) $any; #else -1, #end
+isEdit:#if($any) $any; #else false, #end
+interfaceRes: #if($any) $any; #else ${context.templateJsonAll}, #end
+//可选范围默认值
+ableAll:#if($any) $any; #else
+{
+#foreach($fieLdsModel in ${context.ableAll})
+    #set($projectKey = "${fieLdsModel.projectKey}")
+    #if(${projectKey}=='mast')
+        #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+        #set($mastModel="${html.vModel}")
+        #if($html.selectType == 'custom')
+            #ableAll(${html}, ${mastModel},false)
+        #end
+    #elseif(${projectKey}=='mastTable')
+        #set($html = $fieLdsModel.formMastTableModel.mastTable.fieLdsModel)
+        #set($vmodelTable =${fieLdsModel.formMastTableModel.table})
+        #set($vmodelFeild =${fieLdsModel.formMastTableModel.vModel})
+        #if($html.selectType == 'custom')
+            #ableAll(${html}, "${vmodelFeild}",true)
+        #end
+    #elseif(${projectKey}=='table')
+        #set($child = $fieLdsModel.childList)
+        #set($aliasname = ${child.aliasLowName})
+        #foreach($htmlChild in ${child.childList})
+            #set($html = $htmlChild.fieLdsModel)
+            #set($childvModel = ${html.vModel})
+            #if($html.selectType == 'custom')
+                #ableAll(${html},"${aliasname}${childvModel}",true)
+            #end
+        #end
+    #end
+#end
+},
+#end
+//掩码配置
+maskConfig:#if($any)$any; #else
+{
+    #foreach($fieLdsModel in ${context.fields})
+        #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+        #set($vModel = "${html.vModel}")
+        #set($config = $html.config)
+        #set($linzenkey = $config.projectKey)
+        #if($linzenkey == "input")
+            ${vModel}:#if(${html.maskConfig}) ${html.maskConfig} #else {}#end,
+        #end
+    #end
+    #foreach($child in ${context.children})
+        #set($aliasname = "${child.aliasLowName}")
+        #foreach($fieLdsModel in ${child.childList})
+            #set($html = $fieLdsModel.fieLdsModel)
+            #set($vModel = "${html.vModel}")
+            #set($config = $html.config)
+            #set($linzenkey = $config.projectKey)
+            #if($linzenkey == "input")
+                ${aliasname}${vModel}:#if(${html.maskConfig}) ${html.maskConfig} #else {}#end,
+            #end
+        #end
+    #end
+    #foreach($ChildField in ${context.columnChildren})
+        #foreach($FormMastTableModel in ${ChildField.fieLdsModelList})
+            #set($html = ${FormMastTableModel.mastTable.fieLdsModel})
+            #set($projectKey = ${html.config.projectKey})
+            #set($ChildVmodel =${FormMastTableModel.vModel})
+            #if(${projectKey} == "input")
+                ${ChildVmodel}:#if(${html.maskConfig}) ${html.maskConfig} #else {}#end,
+            #end
+        #end
+    #end
+},
+#end
+//定位属性
+locationScope:#if($any)$any; #else
+{
+    #foreach($fieLdsModel in ${context.fields})
+        #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+        #set($vModel = "${html.vModel}")
+        #set($config = $html.config)
+        #set($linzenkey = $config.projectKey)
+        #if($linzenkey == "location")
+            ${vModel}:#if(${html.locationScope}) ${html.locationScope} #else []#end,
+        #end
+    #end
+    #foreach($child in ${context.children})
+        #set($aliasname = "${child.aliasLowName}")
+        #foreach($fieLdsModel in ${child.childList})
+            #set($html = $fieLdsModel.fieLdsModel)
+            #set($vModel = "${html.vModel}")
+            #set($config = $html.config)
+            #set($linzenkey = $config.projectKey)
+            #if($linzenkey == "location")
+                ${aliasname}${vModel}:#if(${html.locationScope}) ${html.locationScope} #else []#end,
+            #end
+        #end
+    #end
+    #foreach($ChildField in ${context.columnChildren})
+        #foreach($FormMastTableModel in ${ChildField.fieLdsModelList})
+            #set($html = ${FormMastTableModel.mastTable.fieLdsModel})
+            #set($projectKey = ${html.config.projectKey})
+            #set($ChildVmodel =${FormMastTableModel.vModel})
+            #if(${projectKey} == "location")
+                ${ChildVmodel}:#if(${html.locationScope}) ${html.locationScope} #else []#end,
+            #end
+        #end
+    #end
+},
+#end
+##  活动面板参数
+#foreach($fieLdsModel in ${context.form})
+        #set($projectKey = "${fieLdsModel.projectKey}")
+        #set($formModel = ${fieLdsModel.formModel})
+        #set($outermost = ${formModel.outermost})
+        #set($isEnd = "${fieLdsModel.isEnd}")
+        #if(${isEnd}=='0')
+            #if($projectKey=='collapse')
+                #if(${outermost}=='0')
+                    #if($any)
+                        ${formModel.model}:$any;
+                    #else
+                        ${formModel.model}:${formModel.active},
+                    #end
+                #end
+            #end
+            #if($projectKey=='tab')
+                #if(${outermost}=='0')
+                    #if($any)
+                        ${formModel.model}:$any;
+                    #else
+                        ${formModel.model}:'${formModel.active}',
+                    #end
+                #end
+            #end
+        #end
+    #end
+##  子表弹窗数据选择
+#if($isSelectDialog == true)
+//子表弹窗数据选择
+currVmodel:#if($any) $any; #else '', #end
+currTableConf:#if($any) $any; #else {}, #end
+addTableConf:#if($any) $any; #else
+{
+#foreach($children in ${context.children})
+    #set($aliasname = "${children.aliasLowName}")
+    #foreach($item in ${children.footerBtnsList})
+        #if($item.value != 'add' && $item.value != 'batchRemove')
+            ${aliasname}List${item.value}:${item.actionConfig},
+        #end
+    #end
+#end
+},
+#end
+#end
+##    子表多选框选中行数组变量
+#foreach($children in ${context.children})
+    #set($aliasname = "${children.aliasLowName}")
+    selected${aliasname}RowKeys :#if($any) $any; #else [], #end
+#end
+#end
+##控件默认值取值范围
+#macro(ableAll $html,$feildFullName,$flag)
+    #if($html.ableDepIds)
+        ${feildFullName}ableDepIds: ${html.ableDepIds},
+    #end
+    #if($html.ablePosIds)
+        ${feildFullName}ablePosIds: ${html.ablePosIds},
+    #end
+    #if($html.ableUserIds)
+        ${feildFullName}ableUserIds: ${html.ableUserIds},
+    #end
+    #if($html.ableRoleIds)
+        ${feildFullName}ableRoleIds: ${html.ableRoleIds},
+    #end
+    #if($html.ableGroupIds)
+        ${feildFullName}ableGroupIds: ${html.ableGroupIds},
+    #end
+    #if($html.ableIds)
+        ${feildFullName}ableIds:  ${html.ableIds},
+    #end
+#end
+##############################数据选项方法########################################
+##  数据选项-生成方法
+#macro(GetOptionMethod $childTableName)
+    #set($isChildType = '1')
+    #if($!childTableName)
+        #set($isChildType = '2')
+    #end
+    #if(${dataType}=='dictionary')
+    //数据选项--数据字典初始化方法
+    function get${methodName}Options() {
+        getDictionaryDataSelector('${config.dictionaryType}').then(res => {
+            state.optionsObj.${methodName}Options = res.data.list
+        })
+    }
+    #elseif(${dataType}=='dynamic')
+    //数据选项--远端数据初始化方法
+    function get${methodName}Options(isClear) {
+        const index = state.childIndex
+        let templateJsonList = JSON.parse(JSON.stringify(state.interfaceRes.${methodName}))
+        for (let i = 0; i < templateJsonList.length; i++) {
+            let json = templateJsonList[i];
+            if(json.relationField){
+                let relationFieldAll = json.relationField.split("-");
+                let val = json.defaultValue;
+                if(relationFieldAll.length>1 && index>-1){
+                    val = state.dataForm[relationFieldAll[0]+'List']&&state.dataForm[relationFieldAll[0]+'List'].length?
+                            state.dataForm[relationFieldAll[0]+'List'][index][relationFieldAll[1]]:''
+                }else {
+                    val = state.dataForm[relationFieldAll]
+                }
+                json.defaultValue = val ? val : '';
+            }
+        }
+        let template ={
+            paramList:templateJsonList
+        }
+        getDataInterfaceRes('${config.propsUrl}',template).then(res => {
+            let data = res.data
+            state.optionsObj.${methodName}Options = data
+            if(index==-1) return
+            ## 子表设置到行内options
+            #if($!{childTableName})
+            state.dataForm.${childTableName}List[index].${methodName}Options =data
+            #end
+            if(isClear){
+                changeDataFormData(${isChildType},'${childTableName}List','$vModel',index,'')
+            }
+        })
+    }
+    #elseif(${linzenkey}=='popupSelect'|| ${linzenkey}=='popupTableSelect')
+        #if($childTableName)
+            #set($vModel="$childTableName$vModel")
+        #end
+    function get${vModel}Options() {
+        const index = state.childIndex
+       changeDataFormData(${isChildType},'$childTableName','${methodName}',index,${defaultValue})
+    }
+    #end
+#end
+##  数据选项---数据字典和远端数据获取初始化
+#macro(GetDataOptionsMethod)
+##主表
+#foreach($fieLdsModel in ${context.fields})
+    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($dataType = "$!{config.dataType}")
+    #set($linzenkey="${config.projectKey}")
+    #set($defaultValue='""')
+    #if($!config.valueType=='String')
+        #set($defaultValue="'$!{config.defaultValue}'")
+    #elseif($!config.valueType=='undefined')
+        #set($defaultValue='""')
+    #else
+        #set($defaultValue=$!{config.defaultValue})
+    #end
+    #set($methodName = "${html.vModel}")
+    #GetOptionMethod("")
+#end
+##副表
+#foreach($ColumnFieldModel in ${context.mastTable})
+    #set($html =${ColumnFieldModel.formMastTableModel})
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.mastTable.fieLdsModel.config)
+    #set($dataType = "$!{config.dataType}")
+    #set($linzenkey="${config.projectKey}")
+    #set($defaultValue='""')
+    #if($!config.valueType=='String')
+        #set($defaultValue="'$!{config.defaultValue}'")
+    #elseif($!config.valueType=='undefined')
+        #set($defaultValue='""')
+    #else
+        #set($defaultValue=$!{config.defaultValue})
+    #end
+    #set($methodName = "${html.vModel}")
+    #GetOptionMethod("")
+#end
+##子表
+#foreach($child in ${context.children})
+#foreach($fieLdsModel in ${child.childList})
+    #set($html = $fieLdsModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($dataType = "$!{config.dataType}")
+    #set($linzenkey="${config.projectKey}")
+    #set($defaultValue='""')
+    #if($!config.valueType=='String')
+        #set($defaultValue="'$!{config.defaultValue}'")
+    #elseif($!config.valueType=='undefined')
+        #set($defaultValue='""')
+    #else
+        #set($defaultValue=$!{config.defaultValue})
+    #end
+    #set($methodName = "${child.aliasLowName}${html.vModel}")
+    #GetOptionMethod(${child.aliasLowName})
+#end
+#end
+#end
+##  数据联系，changeData方法
+#macro(ChangeData)
+function changeData(model, index) {
+    state.isEdit = false
+    state.childIndex = index
+    for (let key in state.interfaceRes) {
+        if (key != model) {
+            let faceReList = state.interfaceRes[key]
+            for (let i = 0; i < faceReList.length; i++) {
+                let relationField = faceReList[i].relationField;
+                if(relationField){
+                    let modelAll = relationField.split('-');
+                    let faceMode = '';
+                    for (let i = 0; i < modelAll.length; i++) {
+                        faceMode += modelAll[i];
+                    }
+                    if (faceMode == model) {
+                        let options = 'get' + key + 'Options';
+                        eval(options)(true);
+                        changeData(key, index)
+                    }
+                }
+            }
+        }
+    }
+}
+function changeDataFormData(type, data, model,index,defaultValue) {
+    if(!state.isEdit) {
+        if (type == 2) {
+            for (let i = 0; i < state.dataForm[data].length; i++) {
+                if (index == -1) {
+                    state.dataForm[data][i][model] = defaultValue
+                } else if (index == i) {
+                    state.dataForm[data][i][model] = defaultValue
+                }
+            }
+        } else {
+            state.dataForm[data] = defaultValue
+        }
+    }
+}
+#end
+##  编辑，初始化当前Options  $isEdit是否编辑。true编辑 false 新增
+#macro(EditGetOption $isEdit)
+##主表options
+#foreach($fieLdsModel in ${context.fields})
+    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($dataType = "$!{config.dataType}")
+    #if($!{config.dataType}=='dictionary'||$!{config.dataType}=='dynamic')
+    get${vModel}Options();
+    #end
+#end
+
+##副表options
+#foreach($ColumnFieldModel in ${context.mastTable})
+    #set($html =${ColumnFieldModel.formMastTableModel})
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.mastTable.fieLdsModel.config)
+    #if($!{config.dataType}=='dictionary'||$!{config.dataType}=='dynamic')
+    get${vModel}Options();
+    #end
+#end
+##子表表options
+#foreach($itemModel in ${context.children})
+    #set($aliasname =$itemModel.aliasLowName)
+    #set($aliasName =$itemModel.aliasUpName)
+    #set($childList = ${itemModel.childList})
+    #foreach($childList in $childList)
+        #set($fieLdsModel = $childList.fieLdsModel)
+        #set($vModel = "${fieLdsModel.vModel}")
+        #set($field = "${fieLdsModel.vModel}")
+        #set($config = ${fieLdsModel.config})
+        #set($dataType = "$!{config.dataType}")
+        #if($isEdit)
+            #if($!{config.dataType}=='dictionary')
+            get${aliasname}${vModel}Options()
+            #end
+            #if(${dataType}=='dynamic')
+            if (state.dataForm.${itemModel.aliasLowName}List) {
+                for (let i = 0; i < state.dataForm.${aliasname}List.length; i++) {
+                    state.childIndex = i;
+                    get${aliasname}${vModel}Options(false)
+                }
+            }
+            #end
+        #else
+##          新增时获取字典的options
+            #if($!{config.dataType}=='dictionary')
+            get${aliasname}${vModel}Options()
+            #end
+        #end
+    #end
+#end
+#end
+##子表弹窗相关函数，
+#macro(ChildDialogMethod)
+function openSelectDialog(key,value) {
+    state.currTableConf=state.addTableConf[key+value]
+    state.currVmodel=key
+    nextTick(() => {
+    (selectModal.value as any)?.openSelectModal();
+    })
+}
+//子表弹窗选择数据-添加初始化下拉options
+function addForSelect(data) {
+    let currSize= state.dataForm[state.currVmodel].length
+    for (let i = 0; i < data.length; i++) {
+        let item={...state.tableRows[state.currVmodel],...data[i]}
+        state.dataForm[state.currVmodel].push(cloneDeep(item))
+        state.childIndex= currSize + i;
+            #foreach($itemModel in ${context.children})
+                #set($aliasname =$!{itemModel.aliasLowName})
+                #set($aliasName =$!{itemModel.aliasUpName})
+                #set($childList = ${itemModel.childList})
+            if(state.currVmodel === "${aliasname}List"){
+                #foreach($childList in$childList)
+                    #set($fieLdsModel = $childList.fieLdsModel)
+                    #set($vModel = "${fieLdsModel.vModel}")
+                    #set($field = "${fieLdsModel.vModel}")
+                    #set($config = ${fieLdsModel.config})
+                    #set($dataType = "$!{config.dataType}")
+                    #if(${dataType}=='static'  || ${dataType}=='dictionary')
+                    item.$!{aliasname}${vModel}Options = state.optionsObj.$!{aliasname}${vModel}Options;
+                    #end
+                    #if(${dataType}=='dynamic')
+                    get${aliasname}${vModel}Options(false);
+                    #end
+                #end
+            }
+            #end
+        state.childIndex = -1
+    }
+}
+#end
+##面板参数初始化
+#macro(InitActiveValue)
+#foreach($fieLdsModel in ${context.form})
+    #set($projectKey = "${fieLdsModel.projectKey}")
+    #set($formModel = ${fieLdsModel.formModel})
+    #set($outermost = ${formModel.outermost})
+    #set($isEnd = "${fieLdsModel.isEnd}")
+    #if(${isEnd}=='0')
+        #if($projectKey=='collapse')
+            #if(${outermost}=='0')
+            state.${formModel.model}=${formModel.active};
+            #end
+        #end
+        #if($projectKey=='tab')
+            #if(${outermost}=='0')
+            state.${formModel.model}='${formModel.active}';
+            #end
+        #end
+    #end
+#end
+#end
+################################################################################
+## 时间处理方法
+#macro(GetStartAndEndTime $mastKey,$config,$html,$startTime,$endTime)
+    #set($startRelationField="''")
+    #if($config.startRelationField)
+        #set($startRelationField="${context.formModel}.${config.startRelationField}")
+        #if($config.startChild)
+            #set($startRelationField="scope.row.${config.startRelationField}")
+        #end
+    #end
+    #set($startTimeValue="#if(${config.startTimeValue})'${config.startTimeValue}'#else''#end")
+    #set($startTimeType="#if(${config.startTimeType})${config.startTimeType}#else''#end")
+    #set($startTimeTarget="#if(${config.startTimeTarget})${config.startTimeTarget}#else''#end")
+    #set($endRelationField="''")
+    #if($config.endRelationField)
+        #set($endRelationField="${context.formModel}.${config.endRelationField}")
+        #if($config.endChild)
+            #set($endRelationField="record.${config.endRelationField}")
+        #end
+    #end
+    #set($endTimeValue="#if(${config.endTimeValue})'${config.endTimeValue}'#else''#end")
+    #set($endTimeType="#if(${config.endTimeType})${config.endTimeType}#else''#end")
+    #set($endTimeTarget="#if(${config.endTimeTarget})${config.endTimeTarget}#else''#end")
+
+    #set($startTime="getRelationDate(${config.startTimeRule},${startTimeType},${startTimeTarget},${startTimeValue},${startRelationField})")
+    #set($endTime="getRelationDate(${config.endTimeRule},${endTimeType},${endTimeTarget},${endTimeValue},${endRelationField})")
+    #if($mastKey=='timePicker')
+        #set($startTime="getRelationTime(${config.startTimeRule},${startTimeType},${startTimeTarget},${startTimeValue},'${html.format}',${startRelationField})")
+        #set($endTime="getRelationTime(${config.endTimeRule},${endTimeType},${endTimeTarget},${endTimeValue},'${html.format}',${endRelationField})")
+    #end
+#end
+## 时间处理方法-js
+#macro(GetRelationDate)
+function getRelationDate(timeRule, timeType, timeTarget, timeValueData, dataValue) {
+    let timeDataValue: any = null;
+    let timeValue = Number(timeValueData);
+    if (timeRule) {
+        if (timeType == 1) {
+            timeDataValue = timeValue;
+        } else if (timeType == 2) {
+            timeDataValue = dataValue;
+        } else if (timeType == 3) {
+            timeDataValue = new Date().getTime();
+        } else if (timeType == 4 || timeType == 5) {
+            const type = getTimeUnit(timeTarget);
+            const method = timeType == 4 ? 'subtract' : 'add';
+            timeDataValue = dayjs()[method](timeValue, type).valueOf();
+        }
+    }
+    return timeDataValue;
+}
+function getRelationTime(timeRule, timeType, timeTarget, timeValue, formatType, dataValue) {
+    let format = formatType == 'HH:mm' ? 'HH:mm:00' : formatType;
+    let timeDataValue: any = null;
+    if (timeRule) {
+        if (timeType == 1) {
+            timeDataValue = timeValue || '00:00:00';
+            if (timeDataValue.split(':').length == 3) {
+                timeDataValue = timeDataValue;
+            } else {
+                timeDataValue = timeDataValue + ':00';
+            }
+        } else if (timeType == 2) {
+            timeDataValue = dataValue;
+        } else if (timeType == 3) {
+            timeDataValue = dayjs().format(format);
+        } else if (timeType == 4 || timeType == 5) {
+            const type = getTimeUnit(timeTarget + 3);
+            const method = timeType == 4 ? 'subtract' : 'add';
+            timeDataValue = dayjs()[method](timeValue, type).format(format);
+        }
+    }
+    return timeDataValue;
+}
+#end
+

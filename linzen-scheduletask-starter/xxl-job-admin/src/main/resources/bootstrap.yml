@@ -1,0 +1,44 @@
+## 微服务版本可选application-dev或bootstrap.yml
+## 若使用本配置文件需注释application-dev.yml
+#spring:
+#  application:
+#    name: linzen-scheduletask-register
+#  mvc:
+#    servlet:
+#      #  启动之后立即加载servlet
+#      load-on-startup: 0
+#  main:
+#  #解决bean重复定义的。设置为true时，后定义的bean会覆盖之前定义的相同名称的bean
+#    allow-bean-definition-overriding: true
+#    allow-circular-references: true
+#  cloud:
+#    nacos:
+#      username: nacos
+#      password: nacos
+##      discovery:
+##        # 服务注册地址
+##        server-addr: 127.0.0.1:30099
+##        namespace: 69c4eecb-05bd-4041-81fe-1473f95f578c
+#      config:
+#        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+#        file-extension: yaml
+#        group: DEFAULT_GROUP
+#        namespace: 69c4eecb-05bd-4041-81fe-1473f95f578c
+#        extension-configs:
+#          - # 系统配置
+#            data-id: system-config.yaml
+#            group: DEFAULT_GROUP
+#            refresh: true
+#          - # 数据源及Redis配置 配置中添加了关闭多租户 加载顺序往后放
+#            data-id: datasource-scheduletask.yaml
+#            group: DEFAULT_GROUP
+#            refresh: true
+#          - # 框架中间件配置
+#            data-id: frame-config.yaml
+#            group: DEFAULT_GROUP
+#            refresh: true
+#          - # 日志配置
+#            data-id: logger.yaml
+#            group: DEFAULT_GROUP
+#            refresh: true
+#

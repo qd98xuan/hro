@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>linzen-common</artifactId>
+        <groupId>com.linzen</groupId>
+        <version>0.0.1-RELEASE</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>linzen-boot-common</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>linzen-common-core</module>
+        <module>linzen-common-utils</module>
+        <module>linzen-common-constant</module>
+        <module>linzen-common-database</module>
+        <module>linzen-common-redis</module>
+        <module>linzen-common-auth</module>
+        <module>linzen-common-security</module>
+        <module>linzen-common-swagger</module>
+        <module>linzen-common-userinfo</module>
+        <module>linzen-common-office</module>
+        <module>linzen-common-file</module>
+        <module>linzen-common-sms</module>
+        <module>linzen-common-shardingsphere</module>
+        <module>linzen-common-model</module>
+        <module>linzen-common-exception</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+
+    <!-- 手机个推 -->
+    <repositories>
+        <repository>
+            <id>getui-nexus</id>
+            <url>http://mvn.gt.igexin.com/nexus/content/repositories/releases/</url>
+        </repository>
+    </repositories>
+
+</project>

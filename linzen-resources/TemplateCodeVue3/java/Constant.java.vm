@@ -1,0 +1,107 @@
+#set($name = "${context.className.substring(0,1).toUpperCase()}${context.className.substring(1)}")
+#macro(GetLongStr $longStr)
+    #set($num=${longStr.length()}/65000)
+    #if($num>0)
+        #foreach($foo in [0..$num])
+            #if($foo==0)
+                #set($endstr='");')
+                #if(${longStr.substring(0,65000).endsWith('\')})
+                #set($endstr='"");')
+                #end
+                sb.append(${longStr.substring(0,65000)}$endstr
+            #elseif($foo==$num)
+                #set($startIndex=$foo*65000)
+                #set($startstr='"')
+                #if(${longStr.substring($startIndex).startsWith('"')})
+                    #set($startstr='')
+                #end
+                sb.append($startstr${longStr.substring($startIndex)});
+            #else
+                #set($startIndex=$foo*65000)
+                #set($endIndex=($foo+1)*65000)
+                #set($endstr='");')
+                #if(${longStr.substring($startIndex,$endIndex).endsWith('\')})
+                    #set($endstr='"");')
+                #end
+                #if(${longStr.substring($startIndex,$endIndex).endsWith('\\')})
+                    #set($endstr='");')
+                #end
+                #set($startstr='"')
+                #if(${longStr.substring($startIndex,$endIndex).startsWith('"')})
+                    #set($startstr='')
+                #end
+                sb.append($startstr${longStr.substring($startIndex,$endIndex)}$endstr
+            #end
+        #end
+    #else
+                #if($longStr)sb.append($longStr);#end
+    #end
+#end
+package ${context.package}.model.$!{name.toLowerCase()};
+
+import com.linzen.util.JsonUtil;
+import java.util.*;
+
+/**
+ * ${context.genInfo.description}配置json
+ *
+ * @版本： ${context.genInfo.version}
+ * @版权： ${context.genInfo.copyright}
+ * @作者： ${context.genInfo.createUser}
+ * @日期： ${context.genInfo.createDate}
+ */
+public class $!{name}Constant{
+
+    /**
+     * 数据库链接
+     */
+    public static final String  DBLINKID = "${context.dbLinkId}";
+
+    /**
+     * 表别名 map
+     */
+    public static final Map<String,String>  TABLERENAMES = JsonUtil.createJsonToBean(${context.tableRenames},Map.class);
+
+    /**
+     * 子表model map
+     */
+    public static final Map<String,String>  TABLEFIELDKEY = JsonUtil.createJsonToBean(${context.childKeyTableNameMap},Map.class);
+
+    /**
+     * 整个表单配置
+     */
+    public static final String  getFormData(){
+        StringBuilder sb = new StringBuilder();
+        #GetLongStr(${context.formDataStr})
+        return sb.toString();
+    }
+    #if($context.isList)
+
+    /**
+     * 列表字段配置
+     */
+    public static final String  getColumnData(){
+        StringBuilder sb = new StringBuilder();
+        #GetLongStr(${context.columnDataStr})
+        return sb.toString();
+    }
+
+    /**
+     * app列表字段配置
+     */
+    public static final String  getAppColumnData(){
+        StringBuilder sb = new StringBuilder();
+        #GetLongStr(${context.appColumnDataStr})
+        return sb.toString();
+    }
+
+    /**
+     * 表列表
+     */
+    public static final String  getTableList(){
+        StringBuilder sb = new StringBuilder();
+        #GetLongStr(${context.tableListStr})
+        return sb.toString();
+    }
+    #end
+}

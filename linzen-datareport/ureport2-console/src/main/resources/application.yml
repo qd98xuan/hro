@@ -1,0 +1,121 @@
+# 配置端口
+server:
+  port: 30007
+  max-http-header-size: 102400
+  compression:
+    enabled: true
+    min-response-size: 102400
+spring:
+  application:
+    # 应用名称
+    name: linzen-datareport
+  exclude: com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure #排除自动配置，手动配置druid
+  datasource:
+    #数据库类型(可选值 MySQL、SQLServer、Oracle、DM8、KingbaseES、PostgreSQL，请严格按可选值填写)
+    db-type: MySQL
+    host: 192.168.0.210
+    port: 3306
+    username: java_boot_test
+    password: pBx5HaW6WMGSTdDf
+    db-name: java_boot_test
+    db-schema: #金仓达梦选填
+    prepare-url: #自定义url
+
+    # ===================== 动态多数据源 =====================
+    dynamic:
+      primary: master #设置默认的数据源或者数据源组,默认值即为master
+      strict: true #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+      druid:
+        # 空闲时执行连接测试
+        test-while-idle: true
+        # 连接测试最小间隔
+        time-between-eviction-runs-millis: 60000
+        # 获取连接等待3秒 根据网络情况设定
+        max-wait: 3000
+        # 初始化4个连接
+        initial-size: 4
+        # 最大20个连接
+        max-active: 20
+        # 最少保持4个空闲连接
+        min-idle: 4
+        # 空闲连接保活, 超过配置的空闲时间会进行连接检查完成保活操作(数据库自身会断开达到空闲时间的连接， 程序使用断开的连接会报错)
+        keep-alive: true
+        # 解除注释后Druid连接池打印SQL语句 忽略日志等级配置
+        #filters: slf4j
+        slf4j:
+          statementLogEnabled: true
+          resultSetLogEnabled: false
+          connectionLogEnabled: false
+          dataSourceLogEnabled: false
+          statementCreateAfterLogEnabled: false
+          statementCloseAfterLogEnabled: false
+          statementExecuteAfterLogEnabled: false
+          #打印SQL替换参数
+          statementExecutableSqlLogEnable: true
+          statementPrepareAfterLogEnabled: false
+          statementPrepareCallAfterLogEnabled: false
+          statementParameterSetLogEnabled: false
+
+  # ===================== Redis配置 =====================
+  # redis单机模式
+  redis:
+    database: 1 #缓存库编号
+    host: 127.0.0.1
+    port: 6379
+#    password: 123456  # 密码为空时，请将本行注释
+    timeout: 3000 #超时时间(单位：秒)
+    lettuce: #Lettuce为Redis的Java驱动包
+      pool:
+        max-active: 8 # 连接池最大连接数
+        max-wait: -1ms  # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        min-idle: 0 # 连接池中的最小空闲连接
+        max-idle: 8 # 连接池中的最大空闲连接
+
+# redis集群模式
+#  redis:
+#    cluster:
+#      nodes:
+#        - 192.168.0.225:6380
+#        - 192.168.0.225:6381
+#        - 192.168.0.225:6382
+#        - 192.168.0.225:6383
+#        - 192.168.0.225:6384
+#        - 192.168.0.225:6385
+#    password: 123456 # 密码为空时，请将本行注释
+#    timeout: 3000 # 超时时间(单位：秒)
+#    lettuce: #Lettuce为Redis的Java驱动包
+#      pool:
+#        max-active: 8 # 连接池最大连接数
+#        max-wait: -1ms  # 连接池最大阻塞等待时间（使用负值表示没有限制）
+#        min-idle: 0 # 连接池中的最小空闲连接
+#        max-idle: 8 # 连接池中的最大空闲连接
+
+# 日志配置
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    #自定义第三方包名日志等级
+    com.bstek.ureport.console: debug
+    # 解除注释后Druid连接池打印SQL语句
+    druid.sql.Statement: debug
+#    druid.sql.DataSource: debug
+#    druid.sql.Connection: debug
+#    druid.sql.ResultSet: debug
+log:
+  level:
+    # 等级 TRACE,DEBUG,INFO,WARN,ERROR(不区分大小写)
+    root: ERROR
+  path: log/${spring.application.name}
+config:
+  #是否开启多租户
+  MultiTenancy: false
+  #数据库请求最长执行时间， 防止查询的报表数据过大导致内存溢出， -1不限制 单位：秒
+  queryTimeout: 5
+  #最大处理表格数据量
+  maxRows: 100000
+  #报表内引用的图片文件夹路径
+  imgPath:
+  #Column模式 租户字段
+  MultiTenantColumn: f_tenant_id
+  #用户接口地址
+  userUrl: http://127.0.0.1:30000/api/permission/Users/Current/ReportUserInfo

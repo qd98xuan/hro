@@ -1,0 +1,177 @@
+#parse("PublicMacro/ControllerMarco.vm")
+package ${package.Controller};
+#set($peimaryKeyName = "${pKeyName.substring(0,1).toUpperCase()}${pKeyName.substring(1)}")
+#set($peimaryKeyname = "${pKeyName.substring(0,1).toLowerCase()}${pKeyName.substring(1)}")
+#set($serviceName = "${table.serviceName.substring(0,1).toLowerCase()}${table.serviceName.substring(1)}")
+#set($Name = "${genInfo.className.substring(0,1).toUpperCase()}${genInfo.className.substring(1)}")
+#set($name = "${genInfo.className.substring(0,1).toLowerCase()}${genInfo.className.substring(1)}")
+#set($packName = "${genInfo.className.toLowerCase()}")
+#set($searchListSize =$!{searchList})
+#set($columnListSize=$!{columnList})
+
+import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import com.linzen.base.ServiceResult;
+import com.linzen.base.UserInfo;
+import com.linzen.exception.DataBaseException;
+import com.linzen.permission.entity.SysUserEntity;
+import ${package.Service}.*;
+import ${package.Entity}.*;
+import com.linzen.util.*;
+import ${modulePackageName}.model.${packName}.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
+import java.util.*;
+#if($isList)
+import com.linzen.annotation.LinzenField;
+import com.linzen.base.vo.PageListVO;
+import com.linzen.base.vo.PaginationVO;
+import com.linzen.base.vo.DownloadVO;
+import com.linzen.config.ConfigValueUtil;
+import com.linzen.base.entity.ProvinceEntity;
+import java.io.IOException;
+import java.util.stream.Collectors;
+import com.linzen.engine.entity.FlowTaskEntity;
+import com.linzen.exception.WorkFlowException;
+import com.linzen.model.visualJson.UploaderTemplateModel;
+#end
+#if(${hasUploadBtn} || ${hasDownloadBtn})
+import org.springframework.web.multipart.MultipartFile;
+import cn.afterturn.easypoi.excel.ExcelExportUtil;
+import cn.afterturn.easypoi.excel.ExcelImportUtil;
+import cn.afterturn.easypoi.excel.entity.ExportParams;
+import cn.afterturn.easypoi.excel.entity.ImportParams;
+import cn.afterturn.easypoi.excel.entity.params.ExcelExportEntity;
+import cn.afterturn.easypoi.excel.entity.enmus.ExcelType;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Workbook;
+import java.io.File;
+import com.linzen.onlinedev.model.ExcelImFieldModel;
+import com.linzen.onlinedev.model.OnlineImport.ImportDataModel;
+import com.linzen.onlinedev.model.OnlineImport.ImportFormCheckUniqueModel;
+import com.linzen.onlinedev.model.OnlineImport.ExcelImportModel;
+import com.linzen.onlinedev.model.OnlineImport.VisualImportModel;
+import cn.xuyanwu.spring.file.storage.FileInfo;
+import lombok.Cleanup;
+import com.linzen.model.visualJson.config.HeaderModel;
+import com.linzen.base.model.ColumnDataModel;
+import com.linzen.base.util.VisualUtils;
+#end
+#if(${DS})
+import com.baomidou.dynamic.datasource.annotation.DSTransactional;
+#else
+import org.springframework.transaction.annotation.Transactional;
+#end
+#if(${isCloud}=="cloud")
+import com.linzen.model.upload.UploadFileModel;
+import com.linzen.file.FileApi;
+import com.linzen.constant.FileTypeConstant;
+import java.io.ByteArrayOutputStream;
+import com.linzen.file.FileUploadApi;
+import org.apache.dubbo.config.annotation.DubboReference;
+#end
+
+/**
+ * ${genInfo.description}
+ * @版本： ${genInfo.version}
+ * @版权： ${genInfo.copyright}
+ * @作者： ${genInfo.createUser}
+ * @日期： ${genInfo.createDate}
+ */
+@Slf4j
+@RestController
+@Tag(name = "${genInfo.description}" , description = "${module}")
+#if(${isCloud}=="cloud")
+#if(${module}=="form")
+@RequestMapping("/${module}/${genInfo.className}")
+#else
+@RequestMapping("/${genInfo.className}")
+#end
+#else
+#if(${module}=="form")
+##添加流程表单模块名称
+@RequestMapping("/api/workflow/${module}/${genInfo.className}")
+#else
+@RequestMapping("/api/${module}/${genInfo.className}")
+#end
+#end
+public class ${table.controllerName} {
+
+    @Autowired
+    private GeneraterUtils generaterUtils;
+
+    @Autowired
+    private UserProvider userProvider;
+
+    @Autowired
+    private ${table.serviceName} ${serviceName};
+
+    #foreach($tableModel in ${childTableHandle})
+    @Autowired
+    private ${tableModel.aliasUpName}Service ${tableModel.aliasLowName}Service;
+    #end
+
+    #foreach($cl in  ${columnTableHandle})
+    @Autowired
+    private ${cl.modelUpName}Service ${cl.modelLowName}Service;
+    #end
+
+#if(${hasDownloadBtn} || ${hasUploadBtn})
+    @Autowired
+    private ConfigValueUtil configValueUtil;
+
+    #if(${isCloud}=="cloud")
+    @Autowired
+    private FileUploadApi fileUploadApi;
+
+    @Autowired
+    private FileApi fileApi;
+
+    #end
+#end
+##表头按钮接口
+#if(!${isList})##  纯表单方法
+    #CreateMethod()
+    #UpdateMethod()
+#else##   列表方法
+##  获取列表信息
+#GetList()
+##  表头按键接口
+#foreach($btn in ${btnsList})
+#if(${btn.value}=='add')
+    #CreateMethod()
+#end
+#if(${btn.value}=='upload')
+    #UploaderMethod()
+#end
+#if(${btn.value}=='download')
+    #ExportMethod()
+#end
+#if(${btn.value}=='batchRemove')
+    #BatchRemoveMethod()
+#end
+#if(${btn.value}=='batchPrint')
+    #BatchPrintMethod()
+#end
+#end
+##  行内按钮接口
+#foreach($column in ${columnBtnsList})
+#if(${column.value}=='detail' && ${isList})
+    #GetDetailMethod()
+#end
+#if(${column.value}=='remove' && ${isList})
+    #DeleteMethod()
+#end
+#if(${column.value}=='edit' && ${isList})
+    #UpdateMethod()
+#end
+#end
+#end
+##  获取数据接口（不转换数据）
+    #GetInfoMethod()
+
+}

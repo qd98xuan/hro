@@ -1,0 +1,26 @@
+## 需要使用常量  引入此方法
+#macro(ConstantParams )
+##多选控件--popupTableSelect：下拉表格
+#set($multipleUnit =['select','depSelect','roleSelect','userSelect','usersSelect','organizeSelect','treeSelect',
+'posSelect','groupSelect','areaSelect' ,'cascader','currOrganize','treeSelect','checkbox','popupTableSelect'])
+##多选二维数组
+#set($multipleTwoUnit = ['organizeSelect', 'cascader', 'areaSelect'])
+#set($multipleTwoUnitStr = "['organizeSelect', 'cascader', 'areaSelect']")
+##多选动态
+#set($needDynamic=['treeSelect','cascader'])
+##静态需要转json
+#set($needToJsonStatic = ['cascader','checkbox'])
+##静态需要转json（并且需要判断多选）
+#set($needToJsonMultiple = ['select','treeSelect'])
+##详情页需要生成标签的控件
+#set($DetailTag= ['text','uploadFile','uploadImg','colorPicker','rate','slider','inputNumber','sign','iframe','input','location'])
+##上传类控件
+#set($UploadFileUnit=['uploadFile','uploadImg'])
+##导入过滤掉字段
+#set($DownLoadSkipUint=['divider', 'text', 'link', 'alert', 'groupTitle', 'button', 'barcode', 'qrcode', 'relationFormAttr', 'popupAttr', 'calculate',
+    'uploadFile', 'uploadImg', 'colorPicker', 'popupTableSelect', 'relationForm', 'popupSelect', 'calculate'])
+##系统控件linzenkey
+#set($systemProjectKey=['createUser','createTime','modifyUser','modifyTime','currOrganize','currPosition','billRule'])
+##不生成必填判断
+#set($DonotJudgeNull= ['text','divider','switch','rate','slider'])
+#end

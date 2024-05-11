@@ -1,0 +1,1085 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.linzen</groupId>
+    <artifactId>linzen-dependencies</artifactId>
+    <version>0.0.1-RELEASE</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <!--这里修改JDK版本号, 1.8, 11, 17-->
+        <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Maven 相关-->
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
+        <versions-maven-plugin.version>2.15.0</versions-maven-plugin.version>
+        <!-- spring依赖 -->
+        <spring.version>2.7.18</spring.version>
+        <spring-boot-admin.version>2.7.17</spring-boot-admin.version>
+        <spring-boot.version>2.7.18</spring-boot.version>
+        <spring-cloud.version>2021.0.9</spring-cloud.version>
+        <spring-cloud-alibaba.version>2021.0.5.0</spring-cloud-alibaba.version>
+        <!-- swagger -->
+        <knife4j.version>4.1.0</knife4j.version>
+        <swagger-model.version>2.2.8</swagger-model.version>
+        <swagger-ui.version>1.9.6</swagger-ui.version>
+        <!-- 数据库配置 -->
+        <druid.version>1.2.20</druid.version>
+        <mybatis-plus.vesion>3.5.5</mybatis-plus.vesion>
+        <mybatis-plus.generator.vesion>3.4.1</mybatis-plus.generator.vesion>
+        <mybatis-plus.dynamic.vesion>4.2.0</mybatis-plus.dynamic.vesion>
+        <mybatis-dynamic-sql.version>1.4.0</mybatis-dynamic-sql.version>
+        <mybatis-plus-join.vesion>1.4.7</mybatis-plus-join.vesion>
+        <pagehelper.version>6.0.0</pagehelper.version>
+        <mysql.version>8.0.33</mysql.version>
+        <oracle.version>21.9.0.0</oracle.version>
+        <dm18.version>8.1.1.49</dm18.version>
+        <kingbase.version>8.6.0</kingbase.version>
+        <postgre.version>42.6.0</postgre.version>
+        <sqlserver.version>11.2.3.jre8</sqlserver.version>
+        <!-- 其他 -->
+        <!-- 小程序的配置 没有开源代码 https://github.com/binarywang -->
+        <weixin.version>4.6.0</weixin.version>
+        <!-- 一个将汉字转换为拼音的开源类库 https://github.com/belerweb/pinyin4j -->
+        <pinyin4j.version>2.5.1</pinyin4j.version>
+        <!-- 二维码工具 https://github.com/zxing/zxing -->
+        <zxing.version>3.5.3</zxing.version>
+        <!-- 著名的Excel工具库 POI -->
+        <poi.version>4.1.2</poi.version>
+        <easypoi-base.version>4.4.0</easypoi-base.version>
+        <!-- 是否需要改成FastJson2 -->
+        <fastjson.version>2.0.47</fastjson.version>
+        <common-lang3.version>3.12.0</common-lang3.version>
+        <common-lang.version>2.6</common-lang.version>
+        <common-pool.version>2.11.1</common-pool.version>
+        <jwt.version>3.4.0</jwt.version>
+        <thumbnailator.version>0.4.17</thumbnailator.version>
+        <validation.vsersion>2.0.1.Final</validation.vsersion>
+        <hibernate-validator.vsersion>6.0.23.Final</hibernate-validator.vsersion>
+        <itextpdf.version>5.5.13.3</itextpdf.version>
+        <yitter-idgenerator.version>1.0.6</yitter-idgenerator.version>
+        <itext-asian.version>5.2.0</itext-asian.version>
+        <aliyun-oss.version>3.14.1</aliyun-oss.version>
+        <minio.version>8.4.0</minio.version>
+        <qiniu.verion>7.10.2</qiniu.verion>
+        <cos_api.version>5.6.79</cos_api.version>
+        <hutool.version>5.8.22</hutool.version>
+        <guava.version>32.1.3-jre</guava.version>
+        <javax-mail.version>1.6.2</javax-mail.version>
+        <nimbus-jose-jwt.version>9.22</nimbus-jose-jwt.version>
+        <common-fileupload.version>1.5</common-fileupload.version>
+        <commons-beanutils.version>1.9.3</commons-beanutils.version>
+        <commons-io.version>2.11.0</commons-io.version>
+        <dubbo.verssion>2.7.23</dubbo.verssion>
+        <sentinel.version>1.8.6</sentinel.version>
+        <dingtalk.verssion>1.0</dingtalk.verssion>
+        <tencentcloud-sdk-java.version>3.1.278</tencentcloud-sdk-java.version>
+        <aliyun-java-sdk-dysmsapi.version>2.1.0</aliyun-java-sdk-dysmsapi.version>
+        <aliyun-java-sdk-core.version>4.5.30</aliyun-java-sdk-core.version>
+        <alibaba-dingtalk-service-sdk.version>2.0.0</alibaba-dingtalk-service-sdk.version>
+        <antisamy.varsion>1.7.4</antisamy.varsion>
+        <dysmsapi.version>2.0.8</dysmsapi.version>
+        <commons-text.version>1.10.0</commons-text.version>
+        <spring-context-support.version>1.0.11</spring-context-support.version>
+        <dom4j.version>2.1.3</dom4j.version>
+        <okhttp3.version>4.8.1</okhttp3.version>
+        <shardingsphere.version>5.2.1</shardingsphere.version>
+        <xxl-job.version>1.2-RELEASE</xxl-job.version>
+        <seata.version>2.0.0</seata.version>
+
+
+        <!--文件存储-->
+        <oss.huaweicloud.version>3.22.3.1</oss.huaweicloud.version>
+        <oss.aliyun.version>3.15.1</oss.aliyun.version>
+        <oss.qiniu.version>7.11.0</oss.qiniu.version>
+        <oss.qcloud.version>5.6.98</oss.qcloud.version>
+        <oss.baidubce.version>0.10.218</oss.baidubce.version>
+        <oss.upyun.version>4.2.3</oss.upyun.version>
+        <oss.minio.version>8.4.3</oss.minio.version>
+        <oss.aws-s3.version>1.12.272</oss.aws-s3.version>
+        <oss.ftp.version>3.8.0</oss.ftp.version>
+        <oss.sftp.version>0.1.55</oss.sftp.version>
+        <oss.webdav.version>5.10</oss.webdav.version>
+
+        <!-- 物联网 -->
+        <io.netty.version>4.1.90.Final</io.netty.version>
+        <com.taosdata.jdbc.version>3.2.2</com.taosdata.jdbc.version>
+        <jSerialComm.version>2.9.2</jSerialComm.version>
+        <graalvm.version>21.1.0</graalvm.version>
+        <jackson.version>2.13.1</jackson.version>
+        <vertx.version>4.5.7</vertx.version>
+        <vertx.mqtt.version>4.5.7</vertx.mqtt.version>
+        <mapstruct-plus.version>1.3.1</mapstruct-plus.version>
+        <spring-brick.version>3.1.4</spring-brick.version>
+        <micrometer.core.version>1.7.0</micrometer.core.version>
+
+        <!-- Tls Cert 相关 -->
+        <bouncycastle.version>1.46</bouncycastle.version>
+        <spring-data-mongodb.version>3.4.10</spring-data-mongodb.version>
+        <influxdb.version>1.9.0</influxdb.version>
+        <elasticsearch.version>7.17.7</elasticsearch.version>
+        <jakarta.version>2.1.1</jakarta.version>
+
+        <!--漏洞版本升级-->
+        <xercesImpl.version>2.12.2</xercesImpl.version>
+        <kotlin-stdlib.version>1.7.10</kotlin-stdlib.version>
+        <snakeyaml.version>2.2</snakeyaml.version>
+        <kryo.version>5.3.0</kryo.version>
+        <kryo-serializers.version>0.42</kryo-serializers.version>
+        <commons-compress.version>1.21</commons-compress.version>
+        <lock4j-redisson-spring-boot-starter.version>2.2.3</lock4j-redisson-spring-boot-starter.version>
+        <redisson.version>3.18.0</redisson.version>
+        <zip4j.version>2.2.7</zip4j.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <validation-api.version>2.0.1.Final</validation-api.version>
+        <hibernate-validator.version>6.0.7.Final</hibernate-validator.version>
+        <httpmime.version>4.5.13</httpmime.version>
+        <quartz.version>2.3.2</quartz.version>
+        <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
+        <satoken.version>1.37.0</satoken.version>
+        <velocity-engine-core.version>2.3</velocity-engine-core.version>
+        <lombok.version>1.18.26</lombok.version>
+        <oshi-core.version>5.2.4</oshi-core.version>
+        <jna.version>5.5.0</jna.version>
+        <signclient.version>3.0.1</signclient.version>
+        <justauth.version>1.16.4</justauth.version>
+        <commons-codec.version>1.16.0</commons-codec.version>
+        <vavr.version>0.9.2</vavr.version>
+        <vavr.match.version>0.9.2</vavr.match.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- SpringCloud 微服务 -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- SpringCloud Alibaba 微服务 -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- SpringBoot 依赖配置 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Swagger 依赖配置 -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>swagger-bootstrap-ui</artifactId>
+                <version>${swagger-ui.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-boot-starter</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-model.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-models</artifactId>
+                <version>${swagger-model.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-gateway-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+
+            <!-- druid -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+
+            <!-- mybatisplus -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.vesion}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-annotation</artifactId>
+                <version>${mybatis-plus.vesion}</version>
+            </dependency>
+
+            <!-- MYBATIS-PLUS -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-core</artifactId>
+                <version>${mybatis-plus.vesion}</version>
+            </dependency>
+
+            <!-- mybatisplus - dynamic -->
+            <dependency>
+                <groupId>org.mybatis.dynamic-sql</groupId>
+                <artifactId>mybatis-dynamic-sql</artifactId>
+                <version>${mybatis-dynamic-sql.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <version>${mybatis-plus.dynamic.vesion}</version>
+            </dependency>
+            <!-- 代码生成 -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-generator</artifactId>
+                <version>${mybatis-plus.generator.vesion}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>mybatis-plus-extension</artifactId>
+                        <groupId>com.baomidou</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!--Mybatis Plus Join-->
+            <dependency>
+                <groupId>com.github.yulichang</groupId>
+                <artifactId>mybatis-plus-join-boot-starter</artifactId>
+                <version>${mybatis-plus-join.vesion}</version>
+            </dependency>
+
+            <!-- mysql -->
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!--sqlserver-->
+            <dependency>
+                <groupId>com.microsoft.sqlserver</groupId>
+                <artifactId>mssql-jdbc</artifactId>
+                <version>${sqlserver.version}</version>
+            </dependency>
+
+            <!-- 微信 -->
+            <dependency>
+                <groupId>com.github.binarywang</groupId>
+                <artifactId>weixin-java-miniapp</artifactId>
+                <version>${weixin.version}</version>
+            </dependency>
+
+            <!-- excel工具 -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml-schemas</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+
+            <!-- JSON 解析器和生成器 -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${fastjson.version}</version>
+            </dependency>
+
+            <!-- commons-lang3 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${common-lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${common-lang.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons-beanutils.version}</version>
+            </dependency>
+
+            <!-- 公共资源池 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>${common-pool.version}</version>
+            </dependency>
+
+            <!--二维码-->
+            <dependency>
+                <groupId>com.google.zxing</groupId>
+                <artifactId>core</artifactId>
+                <version>${zxing.version}</version>
+            </dependency>
+
+            <!-- 拼音 -->
+            <dependency>
+                <groupId>com.belerweb</groupId>
+                <artifactId>pinyin4j</artifactId>
+                <version>${pinyin4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus-jose-jwt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-http</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>javax.mail</artifactId>
+                <version>${javax-mail.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>itextpdf</artifactId>
+                <version>${itextpdf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>itext-asian</artifactId>
+                <version>${itext-asian.version}</version>
+            </dependency>
+            <!-- 雪花ID生成器 -->
+            <dependency>
+                <groupId>com.github.yitter</groupId>
+                <artifactId>yitter-idgenerator</artifactId>
+                <version>${yitter-idgenerator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.linpeilie</groupId>
+                <artifactId>mapstruct-plus-spring-boot-starter</artifactId>
+                <version>${mapstruct-plus.version}</version>
+            </dependency>
+
+            <!--文件存储-->
+            <!-- linzen-file-core 必须要引入 -->
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-file-core-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- 华为云 OBS 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.huaweicloud</groupId>
+                <artifactId>esdk-obs-java</artifactId>
+                <version>${oss.huaweicloud.version}</version>
+            </dependency>
+
+            <!-- 阿里云 OSS 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.aliyun.oss</groupId>
+                <artifactId>aliyun-sdk-oss</artifactId>
+                <version>${oss.aliyun.version}</version>
+            </dependency>
+
+            <!-- 七牛云 Kodo 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.qiniu</groupId>
+                <artifactId>qiniu-java-sdk</artifactId>
+                <version>${oss.qiniu.version}</version>
+            </dependency>
+
+            <!-- 腾讯云 COS 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.qcloud</groupId>
+                <artifactId>cos_api</artifactId>
+                <version>${oss.qcloud.version}</version>
+            </dependency>
+
+            <!-- 百度云 BOS 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.baidubce</groupId>
+                <artifactId>bce-java-sdk</artifactId>
+                <version>${oss.baidubce.version}</version>
+            </dependency>
+
+            <!-- 又拍云 USS 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.upyun</groupId>
+                <artifactId>java-sdk</artifactId>
+                <version>${oss.upyun.version}</version>
+            </dependency>
+
+            <!-- MinIO 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${oss.minio.version}</version>
+            </dependency>
+
+            <!-- AWS S3 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-s3</artifactId>
+                <version>${oss.aws-s3.version}</version>
+            </dependency>
+
+            <!-- FTP 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${oss.ftp.version}</version>
+            </dependency>
+
+            <!-- SFTP 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${oss.sftp.version}</version>
+            </dependency>
+
+            <!--糊涂工具类扩展，如果要使用 FTP、SFTP 则必须引入，否则不用引入-->
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-extra</artifactId>
+                <version>${hutool.version}</version>
+            </dependency>
+
+            <!-- WebDAV 不使用的情况下可以不引入 -->
+            <dependency>
+                <groupId>com.github.lookfirst</groupId>
+                <artifactId>sardine</artifactId>
+                <version>${oss.webdav.version}</version>
+            </dependency>
+            <!--文件存储-->
+
+            <!--File转MultipartFile-->
+            <dependency>
+                <groupId>commons-fileupload</groupId>
+                <artifactId>commons-fileupload</artifactId>
+                <version>${common-fileupload.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <!--dubbo-->
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-spring-boot-starter</artifactId>
+                <version>${dubbo.verssion}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.spring</groupId>
+                <artifactId>spring-context-support</artifactId>
+                <version>${spring-context-support.version}</version>
+            </dependency>
+
+            <!--sentinel整合dubbo-->
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-apache-dubbo-adapter</artifactId>
+                <version>${sentinel.version}</version>
+            </dependency>
+
+            <!--短信钉钉及企业微信-->
+            <!-- 钉钉API的Jar -->
+            <dependency>
+                <groupId>dingtalk-sdk-java</groupId>
+                <artifactId>taobao-sdk-java</artifactId>
+                <version>1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>dingtalk-sdk-java</groupId>
+                <artifactId>taobao-sdk-java-source</artifactId>
+                <version>1.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.tencentcloudapi</groupId>
+                <artifactId>tencentcloud-sdk-java</artifactId>
+                <version>${tencentcloud-sdk-java.version}</version>
+            </dependency>
+            <!--阿里云短信-->
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>dysmsapi20170525</artifactId>
+                <version>${dysmsapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>aliyun-java-sdk-core</artifactId>
+                <version>${aliyun-java-sdk-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>alibaba-dingtalk-service-sdk</artifactId>
+                <version>${alibaba-dingtalk-service-sdk.version}</version>
+            </dependency>
+            <!--End短信钉钉及企业微信-->
+            <!--防止XSS注入-->
+            <dependency>
+                <groupId>org.owasp.antisamy</groupId>
+                <artifactId>antisamy</artifactId>
+                <version>${antisamy.varsion}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- commons-text -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons-text.version}</version>
+            </dependency>
+            <!-- Oracle-->
+            <dependency>
+                <groupId>com.oracle.database.jdbc</groupId>
+                <artifactId>ojdbc8</artifactId>
+                <version>${oracle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.database.nls</groupId>
+                <artifactId>orai18n</artifactId>
+                <version>${oracle.version}</version>
+            </dependency>
+            <!-- dm -->
+            <dependency>
+                <groupId>com.dameng</groupId>
+                <artifactId>Dm8JdbcDriver18</artifactId>
+                <version>${dm18.version}</version>
+            </dependency>
+            <!--人大金仓-->
+            <dependency>
+                <groupId>cn.com.kingbase</groupId>
+                <artifactId>kingbase8</artifactId>
+                <version>${kingbase.version}</version>
+            </dependency>
+            <!--PostGre-->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgre.version}</version>
+            </dependency>
+            <!--pagehelper分页插件-->
+            <dependency>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper</artifactId>
+                <version>${pagehelper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>${xercesImpl.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.dom4j/dom4j -->
+            <dependency>
+                <groupId>org.dom4j</groupId>
+                <artifactId>dom4j</artifactId>
+                <version>${dom4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+            <!--Apache ShardingSphere-JDBC-->
+            <dependency>
+                <groupId>org.apache.shardingsphere</groupId>
+                <artifactId>shardingsphere-jdbc-core</artifactId>
+                <version>${shardingsphere.version}</version>
+                <scope>compile</scope>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>log4j</artifactId>
+                        <groupId>log4j</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+
+            <!--漏洞版本升级-->
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons-codec.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin-stdlib.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.esotericsoftware</groupId>
+                <artifactId>kryo</artifactId>
+                <version>${kryo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.javakaffee</groupId>
+                <artifactId>kryo-serializers</artifactId>
+                <version>${kryo-serializers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.afterturn</groupId>
+                <artifactId>easypoi-base</artifactId>
+                <version>${easypoi-base.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>commons-compress</artifactId>
+                        <groupId>org.apache.commons</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>lock4j-redisson-spring-boot-starter</artifactId>
+                <version>${lock4j-redisson-spring-boot-starter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.lingala.zip4j</groupId>
+                <artifactId>zip4j</artifactId>
+                <version>${zip4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+            <!-- websocket -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-websocket</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <!-- 字段验证 -->
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <version>${validation-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate-validator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>${httpmime.version}</version>
+            </dependency>
+            <!-- Quartz -->
+            <dependency>
+                <groupId>org.quartz-scheduler</groupId>
+                <artifactId>quartz</artifactId>
+                <version>${quartz.version}</version>
+            </dependency>
+            <!-- Java Servlet -->
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${javax.servlet-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-spring-boot-starter</artifactId>
+                <version>${satoken.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-jwt</artifactId>
+                <version>${satoken.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>cn.hutool</groupId>
+                        <artifactId>hutool-jwt</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-redis-jackson</artifactId>
+                <version>${satoken.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>spring-boot-starter-data-redis</artifactId>
+                        <groupId>org.springframework.boot</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- 缩略图 -->
+            <dependency>
+                <groupId>net.coobird</groupId>
+                <artifactId>thumbnailator</artifactId>
+                <version>${thumbnailator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.afterturn</groupId>
+                <artifactId>easypoi-annotation</artifactId>
+                <version>${easypoi-base.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity-engine-core</artifactId>
+                <version>${velocity-engine-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${oshi-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-platform</artifactId>
+                <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.zhyd.oauth</groupId>
+                <artifactId>JustAuth</artifactId>
+                <version>${justauth.version}</version>
+            </dependency>
+            <!--调度-->
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-scheduletask-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-scheduletask-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>xxl-job-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.json</groupId>
+                <artifactId>jakarta.json-api</artifactId>
+                <version>${jakarta.version}</version>
+            </dependency>
+
+            <!-- Tls Cert 相关 -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk16</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+
+            <!--Seata-->
+            <dependency>
+                <groupId>io.seata</groupId>
+                <artifactId>seata-spring-boot-starter</artifactId>
+                <version>${seata.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.vavr</groupId>
+                <artifactId>vavr</artifactId>
+                <version>${vavr.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.vavr</groupId>
+                <artifactId>vavr-match</artifactId>
+                <version>${vavr.match.version}</version>
+            </dependency>
+
+            <!--时间解析-->
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>2.7</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.lionsoul</groupId>
+                <artifactId>ip2region</artifactId>
+                <version>2.7.0</version>
+            </dependency>
+
+            <!--JS脚本解析-->
+            <dependency>
+                <groupId>org.graalvm.sdk</groupId>
+                <artifactId>graal-sdk</artifactId>
+                <version>${graalvm.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.graalvm.js</groupId>
+                <artifactId>js</artifactId>
+                <version>${graalvm.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.graalvm.js</groupId>
+                <artifactId>js-scriptengine</artifactId>
+                <version>${graalvm.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-core</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-mqtt</artifactId>
+                <version>${vertx.mqtt.version}</version>
+            </dependency>
+
+            <!-- 插件-->
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-common-all</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-iot-entity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-iot-common-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-iot-common-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-iot-common-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-iot-common-plugin-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>linzen-iot-common-script-engine</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>spring-brick</artifactId>
+                <version>${spring-brick.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>spring-brick-bootstrap</artifactId>
+                <version>${spring-brick.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>spring-brick-common</artifactId>
+                <version>${spring-brick.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>spring-brick-loader</artifactId>
+                <version>${spring-brick.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.linzen</groupId>
+                <artifactId>spring-brick-maven-packager</artifactId>
+                <version>${spring-brick.version}</version>
+            </dependency>
+
+
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven-deploy-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${versions-maven-plugin.version}</version>
+                    <configuration>
+                        <generateBackupPoms>false</generateBackupPoms>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    <repositories>
+        <repository>
+            <id>lib_id</id>
+            <url>file://${project.basedir}/linzen-lib</url>
+        </repository>
+    </repositories>
+
+    <!--私服仓库配置-->
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>maven-releases</name>
+            <url>http://127.0.0.1:8081/repository/maven-releases/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>maven-snapshots</name>
+            <url>http://127.0.0.1:8081/repository/maven-snapshots/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>

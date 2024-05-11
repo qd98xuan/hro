@@ -1,0 +1,1317 @@
+##通用参数
+#parse("PublicMacro/ConstantMarco.vm")
+#ConstantParams()
+#parse("PublicMacro/FormMarco.vm")
+##  dataform属性生成
+#macro(EditDataform)
+    #foreach($fieLdsModel in ${context.fields})
+        #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+        #set($fieLdsModel =$fieLdsModel.formColumnModel.fieLdsModel)
+        #set($vModel = "${html.vModel}")
+        #if($vModel !='')
+            #set($config = $html.config)
+            #set($jk = $html.config.projectKey)
+            #set($dataType = "$!{config.dataType}")
+            #set($defaultCurrent = $config.defaultCurrent)
+            #set($defult = $config.defaultValue)
+            #set($format = $html.format)
+            #if($jk!='text' && $jk!='divider')
+                #GetFeildDefaultValue("")
+            #end
+        #end
+    #end
+    #foreach($mast in ${context.mastTable})
+        #set($mastField = $mast.formMastTableModel.mastTable.fieLdsModel)
+        #set($fieLdsModel =$mast.formMastTableModel.mastTable.fieLdsModel)
+        #set($config =$mastField.config)
+        #set($jk = ${config.projectKey})
+        #set($vModel = ${mast.formMastTableModel.vModel})
+        #set($dataType = "$!{config.dataType}")
+        #set($defaultCurrent = $config.defaultCurrent)
+        #set($defult = $config.defaultValue)
+        #set($format = $mastField.format)
+        #if($jk!='text' && $jk!='divider')
+            #GetFeildDefaultValue("")
+        #end
+    #end
+    #if($context.version)
+    version: 0,
+    #end
+#end
+<template>
+    <div class="linzen-content-wrapper">
+        <div class="linzen-content-wrapper-center">
+##            <!-- 有搜索 -->
+#if(${context.columnData.searchList.size()}>0)
+            <div class="linzen-content-wrapper-search-box">
+                <BasicForm @register="registerSearchForm" :schemas="searchSchemas"
+                           @advanced-change="redoHeight" @submit="handleSearchSubmit" @reset="handleSearchReset"
+                           class="search-form">
+                </BasicForm>
+            </div>
+#end
+            <div class="linzen-content-wrapper-content">
+                <BasicTable @register="registerTable" v-bind="getTableBindValue" ref="tableRef"
+                            @columns-change="handleColumnChange">
+                    #if(${context.btnPcList.size()}>0)
+                        <template #tableTitle>
+                            #foreach($btn in  ${context.btnPcList})
+                                #if(${btn.value}=='add')
+                                    <a-button type="primary" preIcon="${btn.icon}" #if(${context.columnData.useBtnPermission}) v-auth="'btn_${btn.value}'" #end
+                                              @click="addHandle()">${btn.label}</a-button>
+                                #end
+                                #if(${btn.value}=='download')
+                                    <a-button type="link" preIcon="${btn.icon}" #if(${context.columnData.useBtnPermission}) v-auth="'btn_${btn.value}'" #end
+                                              @click="openExportModal(true, { columnList: state.exportList, selectIds: getSelectRowKeys() })">${btn.label}</a-button>
+                                #end
+                                #if(${btn.value}=='upload')
+                                    <a-button type="link" preIcon="${btn.icon}" #if(${context.columnData.useBtnPermission}) v-auth="'btn_${btn.value}'" #end
+                                              @click="openImportModal(true, { url: '${context.module}/${context.className}' #if($!{context.isFlow}), enableFlow: 1, flowList: flowList#end })">${btn.label}</a-button>
+                                #end
+                                #if(${btn.value}=='batchRemove')
+                                    <a-button type="link" preIcon="${btn.icon}" #if(${context.columnData.useBtnPermission}) v-auth="'btn_${btn.value}'" #end
+                                              @click="handelBatchRemove()">${btn.label}</a-button>
+                                #end
+                                #if(${btn.value}=='batchPrint')
+                                    <a-button type="link" preIcon="${btn.icon}" #if(${context.columnData.useBtnPermission}) v-auth="'btn_${btn.value}'" #end
+                                              @click="handelBatchPrint()">${btn.label}</a-button>
+                                #end
+                            #end
+                        </template>
+                    #end
+##                    <!-- 有高级查询：开始 -->
+#if(${context.superQuery})
+                    <template #toolbar>
+                        <a-tooltip placement="top">
+                            <template #title>
+                                <span>{{ t('common.superQuery') }}</span>
+                            </template>
+                            <filter-outlined @click="openSuperQuery(true, { columnOptions: superQueryJson })" />
+                        </a-tooltip>
+                    </template>
+#end
+##                    <!-- 有高级查询：结束 -->
+                    <template #bodyCell="{ column, record, index }">
+                        <template v-if="column.flag === 'INDEX'">
+                            <div class="edit-row-action">
+                            #if(!$context.isFlow)
+                                <span class="edit-row-index">{{ index + 1 }}</span>
+                                <i class="ym-custom ym-custom-arrow-expand" @click="handleRowForm(record)"></i>
+                            #else
+                                <span>{{ index + 1 }}</span>
+                            #end
+                            </div>
+                        </template>
+                        <template v-if="record.rowEdit">
+                            <template v-if="column.projectKey === 'inputNumber'">
+                                <linzen-input-number
+                                        v-model:value="record[column.prop]"
+                                        :placeholder="column.placeholder"
+                                        :min="column.min"
+                                        :max="column.max"
+                                        :step="column.step"
+                                        :controls="column.controls"
+                                        :addonBefore="column.addonBefore"
+                                        :addonAfter="column.addonAfter"
+                                        :precision="column.precision"
+                                        :thousands="column.thousands"
+                                        :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'calculate'">
+                                <linzen-calculate
+                                        v-model:value="record[column.prop]"
+                                        :isStorage="column.isStorage"
+                                        :precision="column.precision"
+                                        :thousands="column.thousands"
+                                        detailed />
+                            </template>
+                            <template v-else-if="column.projectKey === 'rate'">
+                                <linzen-rate v-model:value="record[column.prop]" :count="column.count" :allowHalf="column.allowHalf" :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'slider'">
+                                <linzen-slider v-model:value="record[column.prop]" :min="column.min" :max="column.max" :step="column.step" :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'uploadImg'">
+                                <linzen-upload-img
+                                        v-model:value="record[column.prop]"
+                                        :fileSize="column.fileSize"
+                                        :sizeUnit="column.sizeUnit"
+                                        :limit="column.limit"
+                                        :pathType="column.pathType"
+                                        :isAccount="column.isAccount"
+                                        :folder="column.folder"
+                                        :tipText="column.tipText"
+                                        :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'uploadFile'">
+                                <linzen-upload-file
+                                        v-model:value="record[column.prop]"
+                                        :accept="column.accept"
+                                        :fileSize="column.fileSize"
+                                        :sizeUnit="column.sizeUnit"
+                                        :buttonText="column.buttonText"
+                                        :limit="column.limit"
+                                        :pathType="column.pathType"
+                                        :isAccount="column.isAccount"
+                                        :folder="column.folder"
+                                        :tipText="column.tipText"
+                                        :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'switch'">
+                                <linzen-switch v-model:value="record[column.prop]" :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'timePicker'">
+                                <linzen-time-picker v-model:value="record[column.prop]" :format="column.format"
+                                                  :placeholder="column.placeholder" :allowClear="column.clearable"
+                                                  :startTime="column.startTime" :endTime="column.endTime"
+                                                  :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'datePicker'">
+                                <linzen-date-picker v-model:value="record[column.prop]" :type="column.type"
+                                                  :allowClear="column.clearable" :placeholder="column.placeholder"
+                                                  :startTime="column.startTime" :endTime="column.endTime"
+                                                  :format="column.format" :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'organizeSelect'">
+                                <linzen-organize-select v-model:value="record[column.prop]"
+                                                      :placeholder="column.placeholder" :multiple="column.multiple"
+                                                      :allowClear="column.clearable" :disabled="column.disabled"
+                                                      :selectType="column.selectType" :ableIds="column.ableIds" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'depSelect'">
+                                <linzen-dep-select v-model:value="record[column.prop]"
+                                                 :placeholder="column.placeholder" :multiple="column.multiple"
+                                                 :allowClear="column.clearable" :disabled="column.disabled"
+                                                 :selectType="column.selectType" :ableIds="column.ableIds" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'roleSelect'">
+                                <linzen-role-select v-model:value="record[column.prop]"
+                                                  :placeholder="column.placeholder" :multiple="column.multiple"
+                                                  :allowClear="column.clearable" :disabled="column.disabled"
+                                                  :selectType="column.selectType" :ableIds="column.ableIds" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'groupSelect'">
+                                <linzen-group-select v-model:value="record[column.prop]"
+                                                   :placeholder="column.placeholder" :multiple="column.multiple"
+                                                   :allowClear="column.clearable" :disabled="column.disabled"
+                                                   :selectType="column.selectType" :ableIds="column.ableIds" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'posSelect'">
+                                <linzen-pos-select v-model:value="record[column.prop]"
+                                                 :placeholder="column.placeholder" :multiple="column.multiple"
+                                                 :allowClear="column.clearable" :disabled="column.disabled"
+                                                 :selectType="column.selectType" :ableIds="column.ableIds" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'userSelect'">
+                                <linzen-user-select v-model:value="record[column.prop]"
+                                                  :placeholder="column.placeholder" :multiple="column.multiple"
+                                                  :allowClear="column.clearable" :disabled="column.disabled"
+                                                  :selectType="['all', 'custom'].includes(column.selectType) ? column.selectType : 'all'"
+                                                  :ableIds="column.ableIds" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'usersSelect'">
+                                <linzen-users-select v-model:value="record[column.prop]"
+                                                   :placeholder="column.placeholder" :multiple="column.multiple"
+                                                   :allowClear="column.clearable" :disabled="column.disabled"
+                                                   :selectType="column.selectType" :ableIds="column.ableIds" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'areaSelect'">
+                                <linzen-area-select v-model:value="record[column.prop]" :level="column.level"
+                                                  :placeholder="column.placeholder" :multiple="column.multiple"
+                                                  :allowClear="column.clearable" :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="['select', 'radio', 'checkbox'].includes(column.projectKey)">
+                                <linzen-select v-model:value="record[column.prop]" :placeholder="column.placeholder"
+                                             :multiple="column.multiple || column.projectKey === 'checkbox'"
+                                             :allowClear="column.clearable || ['radio', 'checkbox'].includes(column.projectKey)" :showSearch="column.filterable"
+                                             :disabled="column.disabled" :options="column.options"
+                                             :fieldNames="column.props" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'cascader'">
+                                <linzen-cascader v-model:value="record[column.prop]" :placeholder="column.placeholder"
+                                               :multiple="column.multiple" :allowClear="column.clearable"
+                                               :showSearch="column.filterable" :disabled="column.disabled"
+                                               :options="column.options" :fieldNames="column.props"
+                                               :showAllLevels="column.showAllLevels" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'treeSelect'">
+                                <linzen-tree-select v-model:value="record[column.prop]"
+                                                  :placeholder="column.placeholder" :multiple="column.multiple"
+                                                  :allowClear="column.clearable" :showSearch="column.filterable"
+                                                  :disabled="column.disabled" :options="column.options"
+                                                  :fieldNames="column.props" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'relationForm'">
+                                <linzen-relation-form v-model:value="record[column.prop]"
+                                                    :placeholder="column.placeholder" :allowClear="column.clearable"
+                                                    :disabled="column.disabled" :modelId="column.modelId"
+                                                    :columnOptions="column.columnOptions" :relationField="column.relationField"
+                                                    :hasPage="column.hasPage" :pageSize="column.pageSize"
+                                                    :popupType="column.popupType" :popupTitle="column.popupTitle"
+                                                    :popupWidth="column.popupWidth" />
+                            </template>
+                            <template
+                                    v-else-if="column.projectKey === 'popupSelect' || column.projectKey === 'popupTableSelect'">
+                                <linzen-popup-select v-model:value="record[column.prop]"
+                                                   :placeholder="column.placeholder" :multiple="column.multiple"
+                                                   :allowClear="column.clearable" :disabled="column.disabled"
+                                                   :interfaceId="column.interfaceId" :columnOptions="column.columnOptions"
+                                                   :propsValue="column.propsValue" :relationField="column.relationField"
+                                                   :hasPage="column.hasPage" :pageSize="column.pageSize"
+                                                   :popupType="column.popupType" :popupTitle="column.popupTitle"
+                                                   :templateJson="column.templateJson"
+                                                   :popupWidth="column.popupWidth" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'autoComplete'">
+                                <linzen-auto-complete
+                                        v-model:value="record[column.prop]"
+                                        :placeholder="column.placeholder"
+                                        :allowClear="column.clearable"
+                                        :disabled="column.disabled"
+                                        :interfaceId="column.interfaceId"
+                                        :relationField="column.relationField"
+                                        :templateJson="column.templateJson"
+                                        :total="column.total" />
+                            </template>
+                            <template v-else-if="['input', 'textarea'].includes(column.projectKey)">
+                                <linzen-input v-model:value="record[column.prop]" :placeholder="column.placeholder"
+                                            :allowClear="column.clearable" :disabled="column.disabled"
+                                            :readonly="column.readonly" :prefixIcon="column.prefixIcon"
+                                            :suffixIcon="column.suffixIcon" :addonBefore="column.addonBefore"
+                                            :addonAfter="column.addonAfter" :maxlength="column.maxlength"
+                                            :showPassword="column.showPassword">
+                                </linzen-input>
+                            </template>
+                            <template v-else-if="column.projectKey === 'location'">
+                                <linzen-location
+                                        v-model:value="record[column.prop]"
+                                        :autoLocation="column.autoLocation"
+                                        :enableLocationScope="column.enableLocationScope"
+                                        :adjustmentScope="column.adjustmentScope"
+                                        :enableDesktopLocation="column.enableDesktopLocation"
+                                        :locationScope="column.locationScope"
+                                        :clearable="column.clearable"
+                                        :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'sign'">
+                                <linzen-sign v-model:value="record[column.prop]" :disabled="column.disabled" />
+                            </template>
+                            <template v-else-if="systemComponentsList.includes(column.projectKey)">
+                                {{ record[column.prop + '_name'] || record[column.prop] }}
+                            </template>
+                            <template v-else>
+                                {{ record[column.prop] }}
+                            </template>
+                        </template>
+                        <template v-else>
+                            <template v-if="column.projectKey === 'inputNumber'">
+                                <linzen-input-number v-model:value="record[column.prop + '_name']" :precision="column.precision" :thousands="column.thousands" disabled detailed />
+                            </template>
+                            <template v-else-if="column.projectKey === 'calculate'">
+                                <linzen-calculate
+                                        v-model:value="record[column.prop]"
+                                        :isStorage="column.isStorage"
+                                        :precision="column.precision"
+                                        :thousands="column.thousands"
+                                        detailed />
+                            </template>
+                            <template v-else-if="column.projectKey === 'relationForm'">
+                                <p class="link-text" @click="toDetail(column.modelId, record[`${column.prop}_id`])">
+                                    {{ record[column.prop + '_name'] || record[column.prop] }}
+                                </p>
+                            </template>
+                            <template v-else-if="column.projectKey === 'sign'">
+                                <linzen-sign v-model:value="record[column.prop + '_name']" detailed />
+                            </template>
+                            <template v-else-if="column.projectKey === 'rate'">
+                                <linzen-rate v-model:value="record[column.prop + '_name']" :count="column.count" :allowHalf="column.allowHalf" disabled />
+                            </template>
+                            <template v-else-if="column.projectKey === 'slider'">
+                                <linzen-slider v-model:value="record[column.prop + '_name']" :min="column.min" :max="column.max" :step="column.step" disabled />
+                            </template>
+                            <template v-else-if="column.projectKey === 'uploadImg'">
+                                <linzen-upload-img v-model:value="record[column.prop + '_name']" disabled detailed simple v-if="record[column.prop]?.length" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'uploadFile'">
+                                <linzen-upload-file v-model:value="record[column.prop + '_name']" disabled detailed simple v-if="record[column.prop]?.length" />
+                            </template>
+                            <template v-else-if="column.projectKey === 'input'">
+                                <linzen-input
+                                        v-model:value="record[column.prop + '_name']"
+                                        :useMask="column.useMask"
+                                        :maskConfig="column.maskConfig"
+                                        :showOverflow="#if(${context.columnData.showOverflow})${context.columnData.showOverflow} #else false #end"
+                                        detailed />
+                            </template>
+                            <template v-else>
+                                {{ record[column.prop + '_name'] || record[column.prop] }}
+                            </template>
+                        </template>
+##                        <!-- 有工作流：开始 -->
+#if($!{context.isFlow})
+                        <template v-if="column.key === 'flowState' && !record.top">
+                            <a-tag color="processing" v-if="record.flowState == 1">等待审核</a-tag>
+                            <a-tag color="success" v-else-if="record.flowState == 2">审核通过</a-tag>
+                            <a-tag color="error" v-else-if="record.flowState == 3">审核退回</a-tag>
+                            <a-tag v-else-if="record.flowState == 4">流程撤回</a-tag>
+                            <a-tag v-else-if="record.flowState == 5">审核终止</a-tag>
+                            <a-tag color="error" v-else-if="record.flowState == 6">已被挂起</a-tag>
+                            <a-tag color="warning" v-else>等待提交</a-tag>
+                        </template>
+#end
+##                        <!-- 有工作流：结束 -->
+                        <template v-if="column.key === 'action' && !record.top">
+                            <TableAction :actions="getTableActions(record,index)" />
+                        </template>
+                    </template>
+##                    <!-- 有合计：开始 -->
+#if(${context.configurationTotal} == true)
+                    <template #summary v-if="state.cacheList.length">
+                        <a-table-summary fixed>
+                            <a-table-summary-row>
+                            #if(${context.hasPrintBtn} || ${context.hasRemoveBtn} || ${context.hasDownloadBtn})
+                                <a-table-summary-cell :index="0" :col-span="2">合计</a-table-summary-cell>
+                                <a-table-summary-cell :index="1" :col-span="0"></a-table-summary-cell>
+                                <a-table-summary-cell v-for="(item, index) in getColumnSum" :key="index"
+                                                      :index="index + 2"
+                                                      :align="getSummaryCellAlign(index)">{{ item }}</a-table-summary-cell>
+                                <a-table-summary-cell :index="getColumnSum.length + 2"></a-table-summary-cell>
+                            #else
+                                <a-table-summary-cell :index="0">合计</a-table-summary-cell>
+                                <a-table-summary-cell v-for="(item, index) in getColumnSum" :key="index"
+                                                      :index="index + 1"
+                                                      :align="getSummaryCellAlign(index)">{{ item }}</a-table-summary-cell>
+                                <a-table-summary-cell :index="getColumnSum.length + 1"></a-table-summary-cell>
+                            #end
+                            </a-table-summary-row>
+                        </a-table-summary>
+                    </template>
+#end
+##                    <!-- 有合计：结束 -->
+                </BasicTable>
+            </div>
+        </div>
+#if(!$context.isFlow)
+        <ExtraForm ref="extraFormRef" @reload="reload" />
+#end
+#foreach($itemBtn in ${context.columnBtnPcList})
+    #if(!${context.isFlow} && ${itemBtn.value}=="detail")
+##                <!-- 有详情：开始 -->
+        <Detail ref="detailRef" />
+    #end
+    #if(${itemBtn.value}=="edit")
+    #end
+    #if(${itemBtn.value}=="remove")
+    #end
+#end
+        <!-- 有关联表单详情：开始 -->
+        <RelationDetail ref="relationDetailRef" />
+        <!-- 有关联表单详情：结束 -->
+#foreach($itemBtn in ${context.btnPcList})
+    #if(${itemBtn.value}=="add")
+    #end
+    #if(${itemBtn.value}=="upload")
+        <ImportModal @register="registerImportModal" @reload="reload" />
+    #end
+    #if(${itemBtn.value}=="download")
+        <ExportModal @register="registerExportModal" @download="handleDownload" />
+    #end
+    #if(${itemBtn.value}=="batchRemove")
+    #end
+    #if(${itemBtn.value}=="batchPrint")
+        <PrintSelect @register="registerPrintSelect" @change="handleShowBrowse" />
+        <PrintBrowse @register="registerPrintBrowse" />
+    #end
+#end
+#if(${context.superQuery})
+##        <!-- 有高级查询 -->
+        <SuperQueryModal @register="registerSuperQueryModal" @superQuery="handleSuperQuery" />
+#end
+#if(${context.isFlow})
+##        <!-- 带流程：开始 -->
+        <CandidateModal @register="registerCandidate" @confirm="submitCandidate" />
+        <FlowParser @register="registerFlowParser" @reload="reload" />
+        <BasicModal v-bind="$attrs" @register="registerFlowListModal" title="请选择流程" :footer="null"
+                    :width="400" destroyOnClose class="linzen-flow-list-modal">
+            <div class="template-list">
+                <ScrollContainer>
+                    <div class="template-item" v-for="item in flowList" :key="item.id"
+                         @click="selectFlow(item)">
+                        {{ item.fullName }}
+                    </div>
+                </ScrollContainer>
+            </div>
+        </BasicModal>
+#end
+    </div>
+</template>
+
+<script lang="ts" setup>
+
+    #if($context.isFlow)
+    import { getList, del, exportData, batchDelete} from './helper/api';
+    import { create, update } from '/@/api/workFlow/workFlowForm';
+    #else
+    import { getList, del, exportData, batchDelete, create, update } from './helper/api';
+    #end
+    import { getConfigData } from '/@/api/onlineDev/visualDev';
+    import { getCandidates } from '/@/api/workFlow/flowBefore';
+    import { getFlowByFormId } from '/@/api/workFlow/formDesign';
+    import { getFlowList } from '/@/api/workFlow/flowEngine';
+    import FlowParser from '/@/views/workFlow/components/FlowParser.vue';
+    import CandidateModal from '/@/views/workFlow/components/modal/CandidateModal.vue';
+    // 工作流
+    import { getDictionaryDataSelector } from '/@/api/systemData/dictionary';
+    import { getDataInterfaceRes } from '/@/api/systemData/dataInterface';
+    import { ref, reactive, onMounted, toRefs, computed, unref, nextTick, toRaw } from 'vue';
+    import { useMessage } from '/@/hooks/web/useMessage';
+    import { useI18n } from '/@/hooks/web/useI18n';
+    import { useOrganizeStore } from '/@/store/modules/organize';
+    import { useUserStore } from '/@/store/modules/user';
+    import { useBaseStore } from '/@/store/modules/base';
+    import { BasicModal, useModal } from '/@/components/Modal';
+    import { usePopup } from '/@/components/Popup';
+    import { ScrollContainer } from '/@/components/Container';
+    import { BasicForm, useForm } from '/@/components/Form';
+    import { BasicTable, useTable, TableAction, ActionItem, TableActionType, SorterResult } from '/@/components/Table';
+    import { LinzenRelationForm } from '/@/components/Linzen';
+    #if(${context.superQuery})
+    import { SuperQueryModal } from '/@/components/CommonModal';
+    #end
+#foreach($itemBtn in ${context.columnBtnPcList})
+    #if(!${context.isFlow} &&${itemBtn.value}=="detail")
+    import Detail from './Detail.vue';
+    #end
+    #if(${itemBtn.value}=="edit")
+    #end
+    #if(${itemBtn.value}=="remove")
+    #end
+#end
+#foreach($itemBtn in ${context.btnPcList})
+    #if(${itemBtn.value}=="add")
+    #end
+    #if(${itemBtn.value}=="upload")
+    import { ImportModal} from '/@/components/CommonModal';
+    #end
+    #if(${itemBtn.value}=="download")
+    import { ExportModal } from '/@/components/CommonModal';
+    import { downloadByUrl } from '/@/utils/file/download';
+    #end
+    #if(${itemBtn.value}=="batchRemove")
+    #end
+    #if(${itemBtn.value}=="batchPrint")
+    // 打印模板多条生成PrintSelect
+    import PrintSelect from '/@/components/PrintDesign/printSelect/index.vue';
+    import PrintBrowse from '/@/components/PrintDesign/printBrowse/index.vue';
+    #end
+#end
+    // 有关联表单详情：开始
+    import RelationDetail from '/@/views/common/dynamicModel/list/detail/index.vue';
+    // 有关联表单详情：结束
+#if(!$context.isFlow)
+    import ExtraForm from './ExtraForm.vue';
+#end
+    import { useRoute } from 'vue-router';
+    import { FilterOutlined } from '@ant-design/icons-vue';
+    import { getSearchFormSchemas } from '/@/components/FormGenerator/src/helper/transform';
+    import { cloneDeep } from 'lodash-es';
+    import columnList from './helper/columnList';
+    import searchList from './helper/searchList';
+    import superQueryJson from './helper/superQueryJson';
+    import { dyOptionsList, systemComponentsList } from '/@/components/FormGenerator/src/helper/config';
+    import dayjs from 'dayjs';
+    import { thousandsFormat , getDateTimeUnit, getTimeUnit} from '/@/utils/linzen';
+
+    interface State {
+        formFlowId: string;
+        flowList: any[];
+        config: any;
+        columnList: any[];
+        printListOptions: any[];
+        columnBtnsList: any[];
+        customBtnsList: any[];
+        treeFieldNames: any;
+        leftTreeData: any[];
+        leftTreeLoading: boolean;
+        treeActiveId: string;
+        treeActiveNodePath: any;
+        columns: any[];
+        complexColumns: any[];
+        childColumnList: any[];
+        exportList: any[];
+        cacheList: any[];
+        currFlow: any;
+        isCustomCopy: boolean;
+        candidateType: number;
+        currRow: any;
+        workFlowFormData: any;
+        expandObj: any;
+        columnSettingList: any[];
+        searchSchemas: any[];
+        treeRelationObj: any;
+    }
+
+    const route = useRoute();
+    const { createMessage, createConfirm } = useMessage();
+    const { t } = useI18n();
+    const organizeStore = useOrganizeStore();
+    const userStore = useUserStore();
+    const userInfo = userStore.getUserInfo;
+    const baseStore = useBaseStore();
+
+    const [registerExportModal, { openModal: openExportModal, closeModal: closeExportModal, setModalProps: setExportModalProps }] = useModal();
+    const [registerImportModal, { openModal: openImportModal }] = useModal();
+    const [registerSuperQueryModal, { openModal: openSuperQuery }] = useModal();
+    #if(${context.hasPrintBtn})
+    const [registerPrintSelect, { openModal: openPrintSelect }] = useModal();
+    const [registerPrintBrowse, { openModal: openPrintBrowse }] = useModal();
+    #end
+    // 工作流
+    const [registerFlowParser, { openPopup: openFlowParser }] = usePopup();
+    const [registerFlowListModal, { openModal: openFlowListModal, closeModal: closeFlowListModal }] = useModal();
+    const [registerCandidate, { openModal: openCandidateModal, closeModal: closeCandidateModal }] = useModal();
+    // 工作流
+    const formRef = ref<any>(null);
+    const tableRef = ref<Nullable<TableActionType>>(null);
+    const detailRef = ref<any>(null);
+    #if(!$context.isFlow)
+    const extraFormRef = ref<any>(null);
+    #end
+    const relationDetailRef = ref<any>(null);
+    const defaultSearchInfo = {
+        menuId: route.meta.modelId as string,
+        moduleId:'${context.moduleId}',
+        superQueryJson: '',
+        #if(${context.hasPage} && !${context.groupTable} && !${context.treeTable})
+        dataType:0,
+        #end
+    };
+    const searchInfo = reactive({
+        ...cloneDeep(defaultSearchInfo),
+    });
+    const state = reactive<State>({
+        formFlowId: '',
+        flowList: [],
+        config: {},
+        columnList: [],
+        printListOptions: [],
+        columnBtnsList: [],
+        customBtnsList: [],
+        treeFieldNames: {
+        children: #if(${context.columnData.treePropsChildren}) '${context.columnData.treePropsChildren}' #else 'children' #end,
+        title: #if(${context.columnData.treePropsLabel}) '${context.columnData.treePropsLabel}' #else 'fullName' #end,
+        key: #if(${context.columnData.treePropsValue}) '${context.columnData.treePropsValue}' #else 'id' #end,
+            isLeaf: 'isLeaf',
+        },
+        leftTreeData: [],
+        leftTreeLoading: false,
+        treeActiveId: '',
+        treeActiveNodePath: [],
+        columns: [],
+        complexColumns: [], // 复杂表头
+        childColumnList: [],
+        exportList: [],
+        cacheList: [],
+        currFlow: {},
+        isCustomCopy: false,
+        candidateType: 1,
+        currRow: {},
+        workFlowFormData: {},
+        expandObj: {},
+        columnSettingList: [],
+        searchSchemas: [],
+        treeRelationObj: null,
+    });
+    const { flowList, childColumnList, searchSchemas } = toRefs(state);
+    const [registerSearchForm, { updateSchema, resetFields, submit: searchFormSubmit }] = useForm({
+        baseColProps: { span: 6 },
+        showActionButtonGroup: true,
+        showAdvancedButton: true,
+        compact: true,
+    });
+    const [registerTable, { reload, setLoading, getFetchParams, getSelectRowKeys, redoHeight, insertTableDataRecord, updateTableDataRecord, deleteTableDataRecord,clearSelectedRowKeys }] = useTable({
+        api: getList,
+        immediate: false,
+        clickToRowSelect: false,
+        afterFetch: (data) => {
+            const list = data.map((o) => ({ ...o, rowEdit: false }));
+            state.cacheList = cloneDeep(list);
+            return list;
+        },
+    });
+
+    const getTableBindValue = computed(() => {
+        let columns = cloneDeep(state.columns);
+    #if(${context.isFlow})
+        columns.push({ title: '状态', dataIndex: 'flowState', width: 100 });
+    #end
+        const defaultSortConfig=#if(${context.columnData.defaultSortConfig})${context.columnData.defaultSortConfig}#else []#end;
+        const sortField = defaultSortConfig.map(o => (o.sort === 'desc' ? '-' : '') + o.field);
+        const data: any = {
+        #if(!${context.hasPage} || ${context.groupTable} || ${context.treeTable})
+            pagination: false, //没有分页，树形，分组
+        #else
+            pagination: { pageSize: ${context.columnData.pageSize} }, //有分页
+        #end
+            searchInfo: unref(searchInfo),
+            defSort: { sidx: sortField.join(',') },
+            sortFn: (sortInfo: SorterResult | SorterResult[]) => {
+                if (Array.isArray(sortInfo)) {
+                    const sortList = sortInfo.map(o => (o.order === 'descend' ? '-' : '') + o.field);
+                    return { sidx: sortList.join(',') };
+                } else {
+                    const { field, order } = sortInfo;
+                    if (field && order) {
+                        // 排序字段
+                        return { sidx: (order === 'descend' ? '-' : '') + field };
+                    } else {
+                        return {};
+                    }
+                }
+            },
+            ellipsis:#if(${context.columnData.showOverflow})${context.columnData.showOverflow} #else false #end,
+            columns,
+            rowSelection: {
+                type: 'checkbox',
+                getCheckboxProps: (record) => ({ disabled: !!record.top }),
+            },
+            actionColumn: {
+                width: 150,
+                title: '操作',
+                dataIndex: 'action',
+            },
+            #if($!{context.complexHeaderList.size()}>0) bordered: true, #end
+        };
+        return data;
+    });
+##合计变量
+#if(${context.configurationTotal})
+    const getSummaryColumn = computed(() => {
+        let defaultColumns = state.columns;
+        // 处理列固定
+        if (state.columnSettingList?.length) {
+            for (let i = 0; i < defaultColumns.length; i++) {
+                inner: for (let j = 0; j < state.columnSettingList.length; j++) {
+                    if (defaultColumns[i].dataIndex === state.columnSettingList[j].dataIndex) {
+                        defaultColumns[i].fixed = state.columnSettingList[j].fixed;
+                        defaultColumns[i].visible = state.columnSettingList[j].visible;
+                        break inner;
+                    }
+                }
+            }
+            defaultColumns = defaultColumns.filter((o) => o.visible);
+        }
+        let columns: any[] = [];
+        for (let i = 0; i < defaultColumns.length; i++) {
+            const e = defaultColumns[i];
+            if (e.projectKey === 'table' || e.projectKey === 'complexHeader') {
+                if (e.children?.length) columns.push(...e.children);
+            } else {
+                columns.push(e);
+            }
+            if (e.fixed && e.children?.length) {
+                for (let j = 0; j < e.children.length; j++) {
+                    e.children[j].fixed = e.fixed;
+                }
+            }
+        }
+        const leftFixedList = columns.filter((o) => o.fixed === 'left');
+        const rightFixedList = columns.filter((o) => o.fixed === 'right');
+        const noFixedList = columns.filter((o) => o.fixed !== 'left' && o.fixed !== 'right');
+        return [...leftFixedList, ...noFixedList, ...rightFixedList];
+    });
+    const getColumnSum = computed(() => {
+        const sums: any[] = [];
+        const summaryField: any = #if(${context.fieldsTotal})${context.fieldsTotal}#else [] #end; //取summaryField
+        const isSummary = (key) => summaryField.includes(key);
+        const useThousands = key => unref(getSummaryColumn).some(o => o.__vModel__ === key && o.thousands);
+        unref(getSummaryColumn).forEach((column, index) => {
+            let sumVal = state.cacheList.reduce((sum, d) => sum + getCmpValOfRow(d, column.prop), 0);
+            if (!isSummary(column.prop)) sumVal = '';
+            sumVal = Number.isNaN(sumVal) ? '' : sumVal;
+            const realVal = sumVal && !Number.isInteger(sumVal) ? Number(sumVal).toFixed(2) : sumVal;
+            sums[index] = useThousands(column.prop) ? thousandsFormat(realVal) : realVal;
+        });
+        // // 有多选
+        // sums.unshift('');
+        // // 有多选
+        return sums;
+    });
+#end
+##合计方法
+#if(${context.configurationTotal})
+    //合计方法
+    function getCmpValOfRow(row, key) {
+        const summaryField: any = #if(${context.fieldsTotal})${context.fieldsTotal}#else [] #end; //取summaryField
+        const isSummary = (key) => summaryField.includes(key);
+        if (!summaryField.length || !isSummary(key)) return 0;
+        const target = row[key];
+        if (!target) return 0;
+        const data = isNaN(target) ? 0 : Number(target);
+        return data;
+    }
+    //合计对齐
+    function getSummaryCellAlign(index) {
+        if (!unref(getSummaryColumn).length) return;
+        return unref(getSummaryColumn)[index]?.align || 'left';
+    }
+#end
+##行内按键
+    function getTableActions(record,index): ActionItem[] {
+        const list: any[] = [
+        #foreach($itemBtn in ${context.columnBtnPcList})
+            #if(${itemBtn.value}=="edit")
+                {
+                    label: '${itemBtn.label}',
+                    #if(${context.isFlow})
+                        disabled: [1, 2, 4, 5].includes(record.flowState), //有流程加上
+                    #end
+                    onClick: updateHandle.bind(null, record),
+                    #if(${context.columnData.useBtnPermission})
+                        auth: 'btn_edit', //有按钮权限
+                    #end
+                },
+            #end
+            #if(${itemBtn.value}=="detail")
+                {
+                    label: '${itemBtn.label}',
+                    #if(${context.isFlow})
+                        disabled: !record.flowState, //有流程加上
+                    #end
+                    onClick: goDetail.bind(null, record),
+                    #if(${context.columnData.useBtnPermission})
+                        auth: 'btn_detail', //有按钮权限
+                    #end
+                },
+            #end
+            #if(${itemBtn.value}=="remove")
+                {
+                    label: '${itemBtn.label}',
+                    color: 'error',
+                    #if(${context.isFlow})
+                        disabled: [1, 2, 3, 5].includes(record.flowState), //有流程加上
+                    #end
+                    modelConfirm: {
+                        onOk: handleDelete.bind(null, record.id),
+                    },
+                    #if(${context.columnData.useBtnPermission})
+                        auth: 'btn_remove', //有按钮权限
+                    #end
+                },
+            #end
+        #end
+        ];
+        if (record.rowEdit) {
+            let editBtnList: ActionItem[] = [
+                { label: '保存', onClick: saveForRowEdit.bind(null, record, 1) },
+                { label: '取消', color: 'error', onClick: cancelRowEdit.bind(null, record, index) },
+            ];
+            #if($context.isFlow)
+                // 有工作流
+                editBtnList.push({ label: '提交', onClick: submitForRowEdit.bind(null, record) });
+            #end
+            return editBtnList;
+        }
+        return list;
+    }
+##开启流程--流程调用相关方法
+#if(${context.isFlow})
+    function getFlowId() {
+        getFlowByFormId("${context.moduleId}").then((res) => {
+            const flowId = res.data && res.data.id;
+            state.formFlowId = flowId;
+            getFlowOptions();
+        });
+    }
+    // 获取子流程list
+    function getFlowOptions() {
+        getFlowList(state.formFlowId, '1').then((res) => {
+            state.flowList = res.data;
+        });
+    }
+    function selectFlow(item) {
+        state.currFlow = item;
+        closeFlowListModal();
+        const flowTemplateJson = item.flowTemplateJson ? JSON.parse(item.flowTemplateJson) : {};
+        state.isCustomCopy = (flowTemplateJson.properties && flowTemplateJson.properties.isCustomCopy) || false;
+        let record = { rowEdit: true, id: 'linzenAdd', #EditDataform() };
+        insertTableDataRecord(record, 0);
+    }
+    // 选择候选人
+    function submitCandidate(data) {
+        saveForRowEdit(state.currRow, '0', data);
+    }
+#end
+    function cancelRowEdit(record, index) {
+        const id = !record.id || record.id === 'linzenAdd' ? '' : record.id;
+        if (!id) return deleteTableDataRecord('linzenAdd');
+        record.rowEdit = false;
+        const item = cloneDeep(state.cacheList[index]);
+        updateTableDataRecord(item.id, item);
+    }
+    // 行内编辑保存
+    function saveForRowEdit(record, status = '1', candidateData: any = null) {
+        const id = !record.id || record.id === 'linzenAdd' ? '' : record.id;
+#if(${context.isFlow})
+        // 工作流
+        let query = {
+          id,
+          status: status || '1',
+          candidateType: state.candidateType,
+          formData: record,
+          flowId: state.currFlow.id || state.flowList[0].id,
+          flowUrgent: 1,
+        };
+        if (candidateData) query = { ...query, ...candidateData };
+        const formMethod = query.id ? update : create;
+        formMethod(query).then(res => {
+          createMessage.success(res.msg);
+          closeCandidateModal();
+          reload({ page: 1 });
+        });
+#else
+        record.id = id;
+        const query = { ...record };
+        const formMethod = query.id ? update : create;
+        formMethod(query).then((res) => {
+            createMessage.success(res.msg);
+            reload({ page: 1 });
+        });
+#end
+    }
+    // 行内编辑提交审核
+    function submitForRowEdit(record) {
+        record.id = !record.id || record.id === 'linzenAdd' ? '' : record.id;
+        state.currRow = record;
+        state.workFlowFormData = {
+            id: record.id,
+            formData: record,
+            flowId: state.currFlow.id,
+        };
+        getCandidates(0, state.workFlowFormData).then((res) => {
+            const data = res.data;
+            state.candidateType = data.type;
+            if (data.type == 3 && !state.isCustomCopy) {
+                createConfirm({
+                    iconType: 'warning',
+                    title: '提示',
+                    content: '您确定要提交当前流程吗, 是否继续?',
+                    onOk: () => {
+                        saveForRowEdit(record, '0');
+                    },
+                });
+                return;
+            }
+            let branchList = [];
+            let candidateList = [];
+            if (data.type == 1) {
+                branchList = res.data.list.filter((o) => o.isBranchFlow);
+                candidateList = res.data.list.filter((o) => !o.isBranchFlow && o.isCandidates);
+            }
+            if (data.type == 2) {
+                candidateList = res.data.list.filter((o) => o.isCandidates);
+            }
+            openCandidateModal(true, {
+                branchList,
+                candidateList,
+                isCustomCopy: state.isCustomCopy,
+                taskId: state.config.taskId,
+                formData: state.workFlowFormData,
+            });
+        });
+    }
+
+##行内按键方法
+#foreach($itemBtn in ${context.columnBtnPcList})
+    #if(${itemBtn.value}=="edit")
+    // 编辑
+    function updateHandle(record) {
+        buildRowRelation();
+        record.rowEdit = true;
+        #if(${context.isFlow})
+        // 带工作流
+        const flowId = record.flowId || state.flowList[0];
+        if (!flowId) return;
+        const list = state.flowList.filter((o) => o.id === flowId);
+        if (!list.length) return;
+        state.currFlow = list[0];
+        const flowTemplateJson = state.currFlow.flowTemplateJson ? JSON.parse(state.currFlow.flowTemplateJson) : {};
+        state.isCustomCopy = (flowTemplateJson.properties && flowTemplateJson.properties.isCustomCopy) || false;
+        #end
+    }
+    #end
+    #if(${itemBtn.value}=="detail")
+    // 查看详情
+    function goDetail(record) {
+        #if(${context.isFlow})
+            // 带流程
+            const data = {
+                id: record.id,
+                flowId: record.flowId || state.flowList[0].id,
+                opType: 0,
+                status: record.flowState,
+            };
+            openFlowParser(true, data);
+        #else
+            // 不带流程
+            const data = {
+                id: record.id,
+            };
+            detailRef.value?.init(data);
+        #end
+    }
+    #end
+    #if(${itemBtn.value}=="remove")
+    // 删除
+    function handleDelete(id) {
+        del(id).then((res) => {
+            createMessage.success(res.msg);
+            clearSelectedRowKeys();
+            reload();
+        });
+    }
+    #end
+#end
+##表头按键方法
+#foreach($itemBtn in ${context.btnPcList})
+    #if(${itemBtn.value}=="add")
+    // 新增
+    function addHandle() {
+        buildRowRelation();
+        #if(${context.isFlow})
+            // 带流程新增
+            if (!state.flowList.length) return createMessage.error('流程不存在');
+            if (state.flowList.length === 1) return selectFlow(state.flowList[0]);
+            openFlowListModal(true);
+        #else
+            // 不带流程新增
+            let record = { rowEdit: true, id: 'linzenAdd', #EditDataform() };
+            insertTableDataRecord(record, 0);
+        #end
+    }
+    #end
+    #if(${itemBtn.value}=="upload")
+    #end
+    #if(${itemBtn.value}=="download")
+    // 导出
+    function handleDownload(data) {
+        let query = { ...getFetchParams(), ...data };
+        exportData(query)
+                .then((res) => {
+                    setExportModalProps({ confirmLoading: false });
+                    if (!res.data.url) return;
+                    downloadByUrl({ url: res.data.url });
+                    closeExportModal();
+                })
+                .catch(() => {
+                    setExportModalProps({ confirmLoading: false });
+                });
+    }
+    #end
+    #if(${itemBtn.value}=="batchRemove")
+    // 批量删除
+    function handelBatchRemove() {
+        const ids = getSelectRowKeys();
+        if (!ids.length) return createMessage.error('请选择一条数据');
+        createConfirm({
+            iconType: 'warning',
+            title: t('common.tipTitle'),
+            content: '您确定要删除这些数据吗, 是否继续?',
+            onOk: () => {
+                batchDelete(ids).then((res) => {
+                    createMessage.success(res.msg);
+                    clearSelectedRowKeys();
+                    reload();
+                });
+            },
+        });
+    }
+    #end
+    #if(${itemBtn.value}=="batchPrint")
+    //打印方法
+    function handelBatchPrint() {
+    let printIds=#if(${context.columnData.printIds}) ${context.columnData.printIds} #else [] #end
+        if (!printIds?.length) return createMessage.error('未配置打印模板');
+        const ids = getSelectRowKeys();
+        if (!ids.length) return createMessage.error('请选择一条数据');
+        if (printIds?.length === 1) return handleShowBrowse(printIds[0]);
+        openPrintSelect(true, printIds);
+    }
+    function handleShowBrowse(id) {
+        openPrintBrowse(true, { id, batchIds: getSelectRowKeys().join() });
+    }
+    #end
+#end
+
+    function init() {
+        state.config = {};
+    #if(${context.isFlow})
+        // 带流程
+        getFlowId();
+    #end
+        searchInfo.menuId = route.meta.modelId as string;
+        state.columnList = columnList;
+    #if(${context.groupTable})
+        // 分组
+        state.columnList = state.columnList.filter((o) => o.prop != '${context.groupField}');
+    #end
+        setLoading(true);
+        getSearchSchemas();
+        getColumnList();
+        buildOptions();
+    #if(${context.leftTreeTable})
+        // 有左侧树
+        getTreeView(true);
+    #else
+        nextTick(() => {
+            #if(${context.columnData.searchList.size()}>0)
+                // 有搜索列表
+                searchFormSubmit();
+            #else
+                //  无搜索列表
+                reload({ page: 1 });
+            #end
+        });
+    #end
+    }
+
+    function getSearchSchemas() {
+        const schemas = getSearchFormSchemas(searchList);
+        state.searchSchemas = schemas;
+        schemas.forEach((cur) => {
+            const config = cur.__config__;
+            if (dyOptionsList.includes(config.projectKey)) {
+                if (config.dataType === 'dictionary') {
+                    if (!config.dictionaryType) return;
+                    getDictionaryDataSelector(config.dictionaryType).then((res) => {
+                        updateSchema([{ field: cur.field, componentProps: { options: res.data.list } }]);
+                    });
+                }
+                if (config.dataType === 'dynamic') {
+                    if (!config.propsUrl) return;
+                    const query = { paramList: config.templateJson || [] };
+                    getDataInterfaceRes(config.propsUrl, query).then((res) => {
+                        const data = Array.isArray(res.data) ? res.data : [];
+                        updateSchema([{ field: cur.field, componentProps: { options: data } }]);
+                    });
+                }
+            }
+            cur.defaultValue = cur.value;
+        });
+    }
+    function getColumnList() {
+        #if(${context.columnData.useColumnPermission})
+            // 开启列表过滤权限
+            let columnList: any[] = [];
+            const permissionList = userStore.getPermissionList;
+            const list = permissionList.filter(o => o.modelId === searchInfo.menuId);
+            const perColumnList = list[0] && list[0].column ? list[0].column : [];
+            for (let i = 0; i < state.columnList.length; i++) {
+                inner: for (let j = 0; j < perColumnList.length; j++) {
+                    if (state.columnList[i].prop === perColumnList[j].enCode) {
+                        columnList.push(state.columnList[i]);
+                        break inner;
+                    }
+                }
+            }
+        #else
+            // 没有开启列表权限
+            let  columnList = state.columnList;
+        #end
+        state.exportList = columnList.filter(o => o.prop.indexOf('-') < 0);
+        let columns = columnList.map((o) => ({
+            ...o,
+            title: o.label,
+            dataIndex: o.prop,
+            align: o.align,
+            fixed: o.fixed == 'none' ? false : o.fixed,
+            sorter: o.sortable ? { multiple: 1 } : o.sortable,
+            width: o.width || 100,
+        }));
+        //复杂表头
+        columns = getComplexColumns(columns);
+        state.columns = columns.filter((o) => o.prop.indexOf('-') < 0);
+    }
+    //复杂表头
+    function getComplexColumns(columns) {
+        //这里生成复杂表头的配置
+        let complexHeaderList: any[] = #if(${context.complexHeaderList}) ${context.complexHeaderList}; #else []; #end
+        if (!complexHeaderList.length) return columns;
+        let childColumns: any[] = [];
+        for (let i = 0; i < complexHeaderList.length; i++) {
+            const e = complexHeaderList[i];
+            e.title = e.fullName;
+            e.align = e.align;
+            e.dataIndex = e.id;
+            e.prop = e.id;
+            e.children = [];
+            e.projectKey = 'complexHeader';
+            if (e.childColumns?.length) {
+                childColumns.push(...e.childColumns);
+                for (let k = 0; k < e.childColumns.length; k++) {
+                    const item = e.childColumns[k];
+                    for (let j = 0; j < columns.length; j++) {
+                        const o = columns[j];
+                        if (o.__vModel__ == item && o.fixed !== 'left' && o.fixed !== 'right' && !o.__config__.isSubTable) e.children.push({ ...o });
+                    }
+                }
+            }
+        }
+        complexHeaderList = complexHeaderList.filter(o => o.children.length);
+        for (let i = 0; i < columns.length; i++) {
+            const item = columns[i];
+            if (!childColumns.includes(item.__vModel__) || item.__config__.isSubTable) complexHeaderList.push(item);
+        }
+        return complexHeaderList;
+    }
+    // 关联表单查看详情
+    function toDetail(modelId, id) {
+        if (!id) return;
+        getConfigData(modelId).then((res) => {
+            if (!res.data || !res.data.formData) return;
+            const formConf = JSON.parse(res.data.formData);
+            formConf.popupType = 'general';
+            const data = { id, formConf, modelId };
+            relationDetailRef.value?.init(data);
+        });
+    }
+    function handleColumnChange(data) {
+        state.columnSettingList = data;
+    }
+##高级查询
+#if(${context.superQuery})
+    // 高级查询
+    function handleSuperQuery(superQueryJson) {
+        searchInfo.superQueryJson = superQueryJson;
+        reload({ page: 1 });
+    }
+#end
+
+
+##有普通查询
+    function handleSearchReset() {
+        searchFormSubmit();
+    }
+
+    function handleSearchSubmit(data) {
+        clearSelectedRowKeys();
+        let obj = {
+            ...defaultSearchInfo,
+            superQueryJson: searchInfo.superQueryJson,
+            ...data,
+        };
+        Object.keys(searchInfo).map(key => {
+            delete searchInfo[key];
+        });
+        for (let [key, value] of Object.entries(obj)) {
+            searchInfo[key.replaceAll('-', '_')] = value;
+        }
+        console.log(searchInfo);
+        reload({ page: 1 });
+    }
+
+    // 行内编辑获取选项
+    function buildOptions() {
+        const loop = list => {
+            for (let i = 0; i < list.length; i++) {
+                const cur = list[i];
+                if (cur.children?.length) loop(cur.children);
+                const config = cur.__config__;
+                if (!config) continue;
+                if (dyOptionsList.includes(config.projectKey)) {
+                    if (config.dataType === 'dictionary') {
+                        if (!config.dictionaryType) return;
+                        baseStore.getDicDataSelector(config.dictionaryType).then(res => {
+                            cur.options = res;
+                        });
+                    }
+                    if (config.dataType === 'dynamic') {
+                        if (!config.propsUrl) return;
+                        const query = { paramList: config.templateJson || [] };
+                        getDataInterfaceRes(config.propsUrl, query).then(res => {
+                            cur.options = Array.isArray(res.data) ? res.data : [];
+                        });
+                    }
+                }
+            }
+        };
+        loop(state.columns);
+    }
+    #if(!$context.isFlow)
+    function handleRowForm(record) {
+        const data = {
+            id: record.id,
+            menuId: searchInfo.menuId,
+            formData: record,
+        };
+        extraFormRef.value?.init(data);
+    }
+    #end
+##动态时间处理
+    function buildRowRelation() {
+        const loop = list => {
+            for (let i = 0; i < list.length; i++) {
+                let cur = list[i];
+                if (cur.children?.length) loop(cur.children);
+                const config = cur?.__config__;
+                if (!config) continue;
+                if (config.projectKey === 'datePicker') {
+                    if (config.startTimeRule) {
+                        if (config.startTimeType == 1) cur.startTime = config.startTimeValue;
+                        if (config.startTimeType == 3) cur.startTime = new Date().getTime();
+                        if (config.startTimeType == 4 || config.startTimeType == 5) {
+                            const type = getTimeUnit(config.startTimeTarget);
+                            const method = config.startTimeType == 4 ? 'subtract' : 'add';
+                            const startTime = dayjs()[method](config.startTimeValue, type);
+                            let realStartTime = startTime.startOf('day').valueOf();
+                            if (config.startTimeTarget == 4) realStartTime = startTime.startOf('minute').valueOf();
+                            if (config.startTimeTarget == 5) realStartTime = startTime.startOf('second').valueOf();
+                            if (config.startTimeTarget == 6) realStartTime = startTime.valueOf();
+                            cur.startTime = realStartTime;
+                        }
+                    }
+                    if (config.endTimeRule) {
+                        if (config.endTimeType == 1) cur.endTime = config.endTimeValue;
+                        if (config.endTimeType == 3) cur.endTime = new Date().getTime();
+                        if (config.endTimeType == 4 || config.endTimeType == 5) {
+                            const type = getTimeUnit(config.endTimeTarget);
+                            const method = config.endTimeType == 4 ? 'subtract' : 'add';
+                            const endTime = dayjs()[method](config.endTimeValue, type);
+                            let realEndTime = endTime.endOf('day').valueOf();
+                            if (config.endTimeTarget == 4) realEndTime = endTime.endOf('minute').valueOf();
+                            if (config.endTimeTarget == 5) realEndTime = endTime.endOf('second').valueOf();
+                            if (config.endTimeTarget == 6) realEndTime = endTime.valueOf();
+                            cur.endTime = realEndTime;
+                        }
+                    }
+                }
+                if (config.projectKey === 'timePicker') {
+                    if (config.startTimeRule) {
+                        if (config.startTimeType == 1) cur.startTime = config.startTimeValue || null;
+                        if (config.startTimeType == 3) cur.startTime = dayjs().format(cur.format);
+                        if (config.startTimeType == 4 || config.startTimeType == 5) {
+                            const type = getTimeUnit(config.startTimeTarget + 3);
+                            const method = config.startTimeType == 4 ? 'subtract' : 'add';
+                            const startTime = dayjs()[method](config.startTimeValue, type).format(cur.format);
+                            cur.startTime = startTime;
+                        }
+                    }
+                    if (config.endTimeRule) {
+                        if (config.endTimeType == 1) cur.endTime = config.endTimeValue || null;
+                        if (config.endTimeType == 3) cur.endTime = dayjs().format(cur.format);
+                        if (config.endTimeType == 4 || config.endTimeType == 5) {
+                            const type = getTimeUnit(config.endTimeTarget + 3);
+                            const method = config.endTimeType == 4 ? 'subtract' : 'add';
+                            const endTime = dayjs()[method](config.endTimeValue, type).format(cur.format);
+                            cur.endTime = endTime;
+                        }
+                    }
+                }
+            }
+        };
+        loop(state.columns);
+    }
+    onMounted(() => {
+        init();
+    });
+</script>

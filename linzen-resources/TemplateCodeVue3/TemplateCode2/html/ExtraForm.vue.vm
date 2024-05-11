@@ -1,0 +1,139 @@
+#parse("PublicMacro/FormMarco.vm")
+## 行内-弹窗编辑生成表单字段
+#macro(FormRenderingExtra)
+    #foreach($html in ${context.columnList})
+        #set($vModel = "${html.vModel}")
+        #set($beforeVmodel = "${html.vModel}")
+        #set($mastModel="${context.formModel}.${beforeVmodel}")
+        #set($config = $html.config)
+        #set($mastKey = "${config.projectKey}")
+        #set($show = $config.noShow)
+        #set($pcshow = $config.pc)
+        #set($startTime=${html.startTime})
+        #set($endTime=${html.endTime})
+        #if(${mastKey}=='datePicker'||${mastKey}=='timePicker')
+            #GetStartAndEndTime($mastKey,$config,$html,$startTime,$endTime)
+        #end
+        #if($show == false && $pcshow == true && !$html.prop.startsWith("tableField"))
+            <a-col :span="24" class="ant-col-item" #if($context.isFlow) v-if="judgeShow('${beforeVmodel}')"
+            #elseif(${context.columnData.useFormPermission}) #if(${vModel}) v-if="linzen.hasFormP('${beforeVmodel}')"
+            #elseif($mastKey == 'relationFormAttr' || $mastKey == 'popupAttr') v-if="linzen.hasFormP('${html.relationField}')" #end  #end >
+                <a-form-item #if($config.showLabel == true) #if($config.labelWidth && ${context.labelPosition}!="top") :labelCol="{ style: { width: '${config.labelWidth}px' } }"#end
+                #else :labelCol="{ style: { width: '0px' } }"#end #if($vModel) name="${beforeVmodel}" #end>
+                    <template #label>${config.label}#if(${config.label} && ${context.labelSuffix})${context.labelSuffix}#end#if(${config.label} && $config.tipLabel)<BasicHelp text="${config.tipLabel}" />#end</template>
+                    #CreateFieldTag($mastKey,$html,$config,$mastModel,$beforeVmodel,-1,false)
+                </a-form-item>
+            </a-col>
+        #end
+    #end
+#end
+<template>
+##
+##<!-- 普通弹窗 -->
+<BasicModal v-bind="$attrs" @register="registerModal" :title="title" width="${context.generalWidth}"
+            #if(${context.CancelButton}) cancelText="${context.CancelButton}"#end
+            #if(${context.ConfirmButton}) okText="${context.ConfirmButton}"#end
+            :minHeight="100"  @ok="handleSubmit(0)" @continue="handleSubmit(1)" :closeFunc="onClose">
+    <a-row  class="dynamic-form ${context.formStyle}">
+        <a-form :colon="false" size="${context.size}" layout=#if(${context.labelPosition}=="top") "vertical" #else "horizontal" #end
+        labelAlign=#if(${context.labelPosition}=="right") "right" #else "left" #end
+        #if(${context.labelPosition}!="top") :labelCol="{ style: { width: '${context.labelWidth}px' } }" #end
+        :model="dataForm" :rules="dataRule" ref="formRef"  class="${context.formStyle}">
+        <a-row :gutter="#if(${context.formStyle}=='word-form')0#else${context.gutter}#end">
+            <!-- 具体表单 -->
+            #FormRenderingExtra()
+            <!-- 表单结束 -->
+        </a-row>
+        </a-form>
+    </a-row>
+</BasicModal>
+##<!-- 普通弹窗 -->
+
+
+</template>
+<script lang="ts" setup>
+    import { create, update, getInfo } from './helper/api';
+    import { reactive, toRefs, nextTick, ref, unref, computed } from 'vue';
+    import { BasicModal, useModal } from '/@/components/Modal';
+    import { useMessage } from '/@/hooks/web/useMessage';
+    import { useUserStore } from '/@/store/modules/user';
+    import type { FormInstance } from 'ant-design-vue';
+    import { LinzenRelationForm } from '/@/components/Linzen';
+    import { getDictionaryDataSelector } from '/@/api/systemData/dictionary';
+    import { getDataInterfaceRes } from '/@/api/systemData/dataInterface';
+    import { thousandsFormat , getDateTimeUnit, getTimeUnit} from '/@/utils/linzen';
+    import dayjs from 'dayjs';
+
+    interface State {
+        #createStateParam("any")
+        title: string;
+    }
+
+    const emit = defineEmits(['reload']);
+    const userStore = useUserStore();
+    const userInfo = userStore.getUserInfo;
+    const { createMessage } = useMessage();
+    const [registerModal, { openModal, setModalProps }] = useModal();
+
+
+    const formRef = ref<FormInstance>();
+    const state = reactive<State>({
+        #createStateParam()
+        title: '',
+    });
+    const { title, dataRule, dataForm, optionsObj, ableAll, maskConfig } = toRefs(state);
+
+    defineExpose({ init });
+
+    function init(data) {
+        state.title = !data.id || data.id === 'linzenAdd' ? '新增' : '编辑';
+        setFormProps({ continueLoading: false });
+        openModal();
+        #EditGetOption(true)
+        nextTick(() => {
+            getForm().resetFields();
+            state.dataForm = JSON.parse(JSON.stringify(data.formData));
+            state.dataForm.id = !data.id || data.id === 'linzenAdd' ? '' :data.id;
+        });
+    }
+    function getForm() {
+        const form = unref(formRef);
+        if (!form) {
+            throw new Error('form is null!');
+        }
+        return form;
+    }
+    async function handleSubmit() {
+        try {
+            const values = await getForm()?.validate();
+            if (!values) return;
+            setFormProps({ continueLoading: true });
+            const formMethod = state.dataForm.id ? update : create;
+            formMethod(state.dataForm)
+                    .then((res) => {
+                        createMessage.success(res.msg);
+                        setFormProps({ continueLoading: false });
+                        setFormProps({ visible: false });
+                        emit('reload');
+                    })
+                    .catch(() => {
+                        setFormProps({ continueLoading: false });
+                    });
+        } catch (_) {}
+    }
+    function setFormProps(data) {
+        setModalProps(data);
+    }
+    function changeLoading(loading) {
+        setModalProps({ loading });
+    }
+
+    async function onClose() {
+        if (state.isContinue) emit('reload');
+        return true;
+    }
+    //option方法
+    #GetDataOptionsMethod()
+##动态时间处理
+    #GetRelationDate()
+</script>

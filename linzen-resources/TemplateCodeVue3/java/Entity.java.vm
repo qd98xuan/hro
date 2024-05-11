@@ -1,0 +1,91 @@
+package ${package.Entity};
+
+#if(${entityLombokModel})
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+import com.linzen.base.entity.SuperExtendEntity;
+#end
+import java.util.Date;
+import java.util.List;
+import java.io.Serializable;
+#foreach($field in ${table.fields})
+#if(${field.propertyType} =='BigDecimal')
+import java.math.BigDecimal;
+#elseif(${field.propertyType} == 'BigInteger')
+import java.math.BigInteger;
+#elseif(${field.propertyType} == 'LocalTime')
+import java.sql.Time;
+#end
+#end
+/**
+ * ${table.comment}
+ *
+ * @版本： ${genInfo.version}
+ * @版权： ${genInfo.copyright}
+ * @作者： ${genInfo.createUser}
+ * @日期： ${genInfo.createDate}
+ */
+#if(${entityLombokModel})
+@Data
+#end
+#if(${table.convert})
+@TableName("${table.name}")
+#end
+#if(${activeRecord})
+public class ${table.entity} extends Model<${table.entity}> {
+#else
+public class ${table.entityName} extends SuperExtendEntity.SuperExtendDEEntity<String> implements Serializable {
+#end
+#foreach($field in ${table.fields})
+#set($tableField = "${field.name}")
+#set($Property = "${field.propertyName}")
+#if(${field.keyFlag}=='true')
+    @TableId(value ="${tableField.toUpperCase()}"  #if(${field.keyIdentityFlag}),type = IdType.AUTO #end)
+#else
+	#if(${Property} == 'sortCode' || ${Property} == 'description'  || ${Property} == 'enabledMark'  || ${Property} == 'creatorUserId' 
+								  || ${Property} == 'updateUserId' || ${Property} == 'deleteUserId' || ${Property} == 'delFlag' 
+								  || ${Property} == 'creatorTime'  || ${Property} == 'updateTime'   || ${Property} == 'deleteTime' 
+								  || ${Property} == 'tenantId'     || ${Property} == 'flowId'       || ${Property} == 'flowTaskId')
+    #else
+    /**
+	 * ${field.comment}
+	 **/
+    @TableField("${tableField.toUpperCase()}")
+    #end
+#end
+#if($field.fill)
+    @Version
+#end
+#if(${Property} == 'sortCode' || ${Property} == 'description'  || ${Property} == 'enabledMark'  || ${Property} == 'creatorUserId' 
+							  || ${Property} == 'updateUserId' || ${Property} == 'deleteUserId' || ${Property} == 'delFlag' 
+							  || ${Property} == 'creatorTime'  || ${Property} == 'updateTime'   || ${Property} == 'deleteTime' 
+							  || ${Property} == 'tenantId'     || ${Property} == 'flowId'       || ${Property} == 'flowTaskId')
+
+#elseif(${field.getPropertyType} =='LocalDateTime' || ${field.getPropertyType} =='datePicker' || ${field.getPropertyType} =='LocalDate')
+    private Date ${Property};
+#elseif(${field.getPropertyType} =='Clob')
+    private String ${Property};
+#elseif(${field.getPropertyType} == 'LocalTime')
+    private Time ${Property};
+#else
+	private ${field.getPropertyType()} ${Property};
+#end
+#end
+
+#if(${main})
+#foreach($item in $allTableNameList)
+    #set($TableEntity = "${item.table.substring(0,1).toUpperCase()}${item.table.substring(1)}")
+    #set($tableEntity = "${item.table.substring(0,1).toLowerCase()}${item.table.substring(1)}")
+##  副表一对一
+    #if(${item.tableTag} =='sub-linzen')
+    @TableField(exist = false)
+    private ${TableEntity}Entity $tableEntity;
+    #end
+##  子表一对多
+    #if(${item.tableTag} =='sub')
+    @TableField(exist = false)
+    private List<${TableEntity}Entity> $tableEntity;
+    #end
+#end
+#end
+}

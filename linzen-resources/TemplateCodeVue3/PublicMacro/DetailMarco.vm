@@ -1,0 +1,530 @@
+##详情-表单生成
+#macro(DetailFormRendering)
+    #foreach($fieLdsModel in ${context.form})
+        #set($projectKey = "${fieLdsModel.projectKey}")
+        #set($isEnd = "${fieLdsModel.isEnd}")
+        #set($formModel = ${fieLdsModel.formModel})
+        #set($config= $formModel.config)
+        #set($span=$config.span)
+        #set($outermost = ${formModel.outermost})
+        #set($borderType = ${formModel.borderType})
+        #set($borderColor = ${formModel.borderColor})
+        #set($borderWidth = ${formModel.borderWidth})
+        #set($pcshow = $config.pc)
+        #if(${projectKey}=='row' && $pcshow == true)
+            #if(${isEnd}=='0')
+            <a-col :span="${formModel.span}" class="ant-col-item">
+            <a-row :gutter="#if(${context.formStyle}=='word-form')0#else${context.gutter}#end">
+            #else
+            </a-row>
+            </a-col>
+            #end
+        #elseif(${projectKey}=='card' && $pcshow == true)
+            #if(${isEnd}=='0')
+            <a-col  #if(${span}) :span="${span}" #else :span="24" #end class="ant-col-item">
+            <a-card class="mb-20"   #if(${formModel.shadow}=='hover') hoverable #end>
+                #if(${formModel.header})
+                    <template #title>${formModel.header}#if(${formModel.header} && ${config.tipLabel})<BasicHelp text="${config.tipLabel}" />#end</template>
+                #end
+                <a-row>
+            #else
+                </a-row>
+            </a-card>
+            </a-col>
+            #end
+        #elseif(${projectKey}=='tab' && $pcshow == true)
+            #set($tabs = "a-tabs")
+            #if(${outermost}=='1')
+                #set($tabs = "a-tab-pane")
+            #end
+            #if(${isEnd}=='0')
+                #if(${outermost}=='0')
+                <a-col :span="${formModel.span}" class="ant-col-item">
+                    <${tabs}  v-model:activeKey="state.${formModel.model}" #if($formModel.type)type="${formModel.type}"#end tabPosition="${formModel.tabPosition}" class="mb-20" >
+                #else
+                    <${tabs}  tab="${formModel.title}" key="${formModel.name}" forceRender>
+                    <a-row>
+                #end
+            #else
+                #if(${outermost}=='0')
+                </${tabs}>
+                </a-col>
+                #else
+                </a-row>
+                </${tabs} >
+                #end
+            #end
+        #elseif(${projectKey}=='tableGrid' || ${projectKey}=='tableGridTd' || ${projectKey}=='tableGridTr')
+            #set($tabs = "tbody")
+            #set($tableGrid = "table")
+            #if(${projectKey}=='tableGridTr')
+                #set($tabs = "tr")
+            #elseif(${projectKey}=='tableGridTd')
+                #set($tabs = "")
+                #if(${config.merged}==false)
+                    #set($tabs = "td")
+                #end
+            #end
+            #if(${config.pc}==true)
+                #if(${isEnd}=='0')
+                    #if(${projectKey}=='tableGrid')
+                    <${tableGrid} class="table-grid-box" :style='{"--borderType":"${borderType}","--borderColor":"${borderColor}","--borderWidth":"${borderWidth}px"}'>
+                    #end
+                    #if($tabs)
+                    <${tabs}#if(${config.colspan}) colspan="${config.colspan}"#end#if(${config.rowspan}) rowspan="${config.rowspan}"#end>
+                    #end
+                #else
+                    #if($tabs)
+                    </${tabs}>
+                    #end
+                    #if(${projectKey}=='tableGrid')
+                    </${tableGrid}>
+                    #end
+                #end
+            #end
+        #elseif(${projectKey}=='groupTitle' || ${projectKey}=='text'|| ${projectKey} == 'button' || ${projectKey} == 'link' || ${projectKey} == 'alert'|| ${projectKey} == 'divider')
+            #if($pcshow== true)
+            <a-col :span="${span}" class="ant-col-item">
+                <a-form-item>
+                    <${config.tag}
+                    #if($formModel.style) :style='${formModel.style}'#end
+                    #if($formModel.href) href = "$formModel.href"#end
+                    #if($formModel.target) target = "$formModel.target"#end
+                    #if($formModel.showIcon) :show-icon= "$formModel.showIcon"#end
+                    #if($formModel.align) align="${formModel.align}" #end
+                    #if($formModel.disabled) :disabled="${formModel.disabled}" #end
+                    #if($formModel.buttonText)  buttonText="${formModel.buttonText}"#end
+                    #if($formModel.type) type="${formModel.type}" #end
+                    #if($formModel.textStyle) :textStyle='${formModel.textStyle}'#end
+                    #if($formModel.contentPosition) contentPosition="${formModel.contentPosition}" #end
+                    #if(${projectKey} == 'alert' && $!{formModel.closable}) :closable= "$formModel.closable" #end
+                    #if($formModel.title) title ="${formModel.title}" #end
+                    #if($formModel.closeText) closeText ="${formModel.closeText}" #end
+                    #if($formModel.description) description ="${formModel.description}" #end
+                    #if($formModel.helpMessage) helpMessage ="${formModel.helpMessage}" #end
+                    #if($formModel.content) content ="$formModel.content" #end>
+                </${config.tag}>
+                </a-form-item>
+            </a-col>
+            #end
+        #elseif(${projectKey}=='collapse' && $pcshow == true)
+            #set($collapse = "a-collapse")
+            #if(${outermost}=='1')
+                #set($collapse = "a-collapse-panel")
+            #end
+            #if(${isEnd}=='0')
+                #if(${outermost}=='0')
+                <a-col :span="${formModel.span}" class="ant-col-item">
+                    <${collapse} ghost expandIconPosition="right"  :accordion="${formModel.accordion}" v-model:activeKey="state.${formModel.model}" class="mb-20">
+                #else
+                    <${collapse} header="${formModel.title}" key="${formModel.name}" forceRender>
+                #end
+            #else
+                #if(${outermost}=='0')
+                </${collapse}>
+                </a-col>
+                #else
+                </${collapse}>
+                #end
+            #end
+        #elseif(${projectKey}=='mast' || ${projectKey}=='mastTable')
+            #DetailMastTable(${projectKey})
+        #elseif($projectKey == 'table')
+            #DetailChildTable()
+        #end
+    #end
+#end
+##详情-主副标签生成
+#macro(DetailMastTable $tableType)
+    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+    #set($beforeVmodel =${html.vModel})
+    ##    副表参数
+    #if($tableType=='mastTable')
+        #set($html = $fieLdsModel.formMastTableModel.mastTable.fieLdsModel)
+        #set($beforeVmodel =${fieLdsModel.formMastTableModel.vModel})
+    #end
+    #set($vModel = "${html.vModel}")
+    #set($mastModel="${context.formModel}.${beforeVmodel}")
+    #set($config = $html.config)
+    #set($mastKey = "${config.projectKey}")
+    #set($show = $config.noShow)
+    #set($pcshow = $config.pc)
+    #set($startTime=${html.startTime})
+    #set($endTime=${html.endTime})
+##    时间处理
+    #if(${mastKey}=='datePicker'||${mastKey}=='timePicker')
+##            #GetStartAndEndTime($mastKey,$config,$html,$startTime,$endTime)
+    #end
+    #if($show == false && $pcshow == true)
+    <a-col :span="${config.span}" class="ant-col-item" #if(${context.columnData.useFormPermission}) #if(${vModel}) v-if="hasFormP('${beforeVmodel}')"
+        #elseif($mastKey == 'relationFormAttr' || $mastKey == 'popupAttr') v-if="hasFormP('${html.relationField}')" #end  #end >
+        <a-form-item #if($config.showLabel == true)   #if($config.labelWidth && ${context.labelPosition}!="top") :labelCol="{ style: { width: '${config.labelWidth}px' } }"#end
+            #else :labelCol="{ style: { width: '0px' } }"#end #if($vModel) name="${beforeVmodel}" #end>
+            <template #label>${config.label}#if(${config.label} && ${context.labelSuffix})${context.labelSuffix}#end#if(${config.label} && $config.tipLabel)<BasicHelp text="${config.tipLabel}" />#end</template>
+            #DetailFieldTag($mastKey,$html,$config,$mastModel,$beforeVmodel,-1)
+        </a-form-item>
+    </a-col>
+    #end
+#end
+##  详情-生成字段标签
+#macro(DetailFieldTag $mastKey,$html,$config,$mastModel,$beforeVmodel,$index)
+    #if($DetailTag.contains($mastKey))
+    <${config.tag}  #if($vModel)  v-model:value="${mastModel}"#end
+        #if($mastKey!='text')
+            #if($html.placeholder) placeholder="${html.placeholder}" #end
+        #else
+            #if($config.defaultValue) value="${config.defaultValue}"#end
+        #end
+        #if($html.maxlength) :maxlength="${html.maxlength}" #end disabled
+        #if($mastKey =='uploadFile' || $mastKey =='uploadImg' || $mastKey =='inputNumber' || $mastKey =='calculate'
+            || $mastKey =='sign' || $mastKey =='input' || $mastKey =='location') detailed #end
+        #if($html.readonly == true ) readonly #end
+        #if($html.clearable == true ) allowClear #end
+        #if($html.prefixIcon) prefix-icon='${html.prefixIcon}' #end
+        #if($html.suffixIcon) suffix-icon='${html.suffixIcon}' #end
+        #if($html.style) :style='${html.style}'#end
+        #if($html.showWordLimit == true ) ${html.showWordLimit} #end
+        #if($html.size) size="${html.size}" #end
+        #if($html.min) :min="${html.min}" #end
+        #if($html.max) :max="${html.max}" #end
+        #if($html.count) :count="${html.count}" #end
+        #if($html.type) type="${html.type}" #end
+        #if($html.autoSize) :autoSize='${html.autoSize}' #end
+        #if($html.step) :step="${html.step}" #end
+        #if($html.precision) :precision="${html.precision}" #end
+        #if($html.stepstrictly==true) stepstrictly #end
+        #if($html.textStyle) :textStyle='${html.textStyle}' #end
+        #if($html.lineHeight) :lineHeight="${html.lineHeight}" #end
+        #if($html.fontSize) :fontSize="${html.fontSize}" #end
+        #if($html.controls) :controls="${html.controls}" #end
+        #if($html.showChinese) :showChinese="${html.showChinese}" #end
+        #if($html.showPassword) show-password #end
+        #if($html.filterable || $html.filterable=='false') :showSearch='${html.filterable}' #end
+        #if($html.multiple) :multiple="${html.multiple}" #end
+        #if($html.separator) separator="${html.separator}" #end
+        #if($html.isrange==true) is-range #end
+        #if($html.rangeseparator) range-separator="${html.rangeseparator}" #end
+        #if($html.startplaceholder) start-placeholder="${html.startplaceholder}" #end
+        #if($html.endplaceholder) end-placeholder="${html.endplaceholder}" #end
+        #if($html.format) format="${html.format}" #end
+        #if($html.colorformat) color-format="${html.colorformat}" #end
+        #if($html.valueformat) value-format="${html.valueformat}" #end
+        #if($html.activetext) active-text="${html.activetext}" #end
+        #if($html.inactivetext) inactive-text="${html.inactivetext}" #end
+        #if($html.activecolor) active-color="${html.activecolor}" #end
+        #if($html.inactivecolor) inactive-color="${html.inactivecolor}" #end
+        #if($html.activevalue) :active-value="${html.activevalue}" #end
+        #if($html.inactivevalue) :inactive-value="${html.inactivevalue}" #end
+        #if($html.pickeroptions) :picker-options='${html.pickeroptions}'#end
+        #if($html.showScore == true ) show-score #end
+        #if($html.showText == true ) show-text #end
+        #if($html.allowhalf == true ) allow-half #end
+        #if($html.showAlpha == true ) show-alpha #end
+        #if($html.showStops == true ) show-stops #end
+        #if($html.range == true ) range #end
+        #if($html.showTip == true ) :showTip="${html.showTip}" #end
+        #if($html.accept) accept="${html.accept}" #end
+        #if($html.fileSize) :fileSize="${html.fileSize}" #end
+        #if($html.sizeUnit) sizeUnit="${html.sizeUnit}" #end
+        #if($html.limit) :limit="${html.limit}" #end
+        #if($html.pathType) pathType="${html.pathType}" #end
+        #if($html.isAccount) :isAccount="${html.isAccount}" #end
+        #if($html.folder) folder="${html.folder}" #end
+        #if($html.buttonText) buttonText="${html.buttonText}" #end
+        #if($html.contentposition) content-position="${html.contentposition}" #end
+        #if($html.isAmountChinese) isAmountChinese #end
+        #if($html.thousands) thousands #end
+        #if($html.addonAfter) addonAfter="${html.addonAfter}" #end
+        #if($html.addonBefore) addonBefore="${html.addonBefore}" #end
+        #if($html.level || $html.level=='0') :level=${html.level} #end
+        #if($html.href) href = "$html.href"#end
+        #if($html.height) :height = "$html.height"#end
+        #if($html.useMask) :useMask = "${html.useMask}"#end
+        #if($html.maskConfig) :maskConfig = "maskConfig.${beforeVmodel}"#end
+        #if($html.autoLocation) :autoLocation = "$html.autoLocation" #end
+        #if($html.enableLocationScope) :enableLocationScope = "$html.enableLocationScope" #end
+        #if($html.adjustmentScope) :adjustmentScope = "$html.adjustmentScope" #end
+        #if($html.enableDesktopLocation) :enableDesktopLocation = "$html.enableDesktopLocation" #end
+        #if($html.locationScope) :locationScope = "state.locationScope.${beforeVmodel}" #end
+        #if($html.borderType) borderType = "$html.borderType" #end
+        #if($html.borderColor) borderColor = "$html.borderColor" #end
+        #if($html.borderWidth) :borderWidth = "$html.borderWidth" #end
+    >
+    </${config.tag}>
+    #else
+        #if(${mastKey} == 'relationFormAttr' || ${mastKey} == 'popupAttr')
+            #if(${html.isStorage} == 0)
+                #if($index=="index")
+                    #set($mastModel = "record.${html.relationField}_${html.showField}")
+                #else
+                    #set($mastModel = "${context.formModel}.${html.relationField}_${html.showField}")
+                #end
+
+            #end
+        #end
+        #if($dataType=='static')
+        <p>{{ ${mastModel} }} </p>
+        #else
+            #if(${mastKey} == 'relationForm')
+            <p class="link-text" @click="toDetail('${html.modelId}', ${mastModel}_id)">{{ ${mastModel} }}</p>
+            #elseif(${mastKey} == 'input')
+            <p>#if($html.slot.prepend)${html.slot.prepend}#end{{${mastModel}}}#if($html.slot.append)${html.slot.append}#end</p>
+            #elseif(${mastKey} == 'editor')
+##          副文本内放标签
+            <div v-html="${mastModel}"></div>
+            #else
+            <p>{{${mastModel}}}</p>
+            #end
+        #end
+    #end
+#end
+##详情-子表生成
+#macro(DetailChildTable)
+#set($child = $fieLdsModel.childList)
+#set($aliasname = "")
+#foreach($children in ${context.children})
+    #if(${children.tableModel}==${child.tableModel})
+        #set($aliasname = "${children.aliasLowName}")
+        #set($aliasName = "${children.aliasUpName}")
+    #end
+#end
+<a-col :span="${child.span}" class="ant-col-item">
+<a-form-item>
+    #if($child.showTitle== true)
+        <LinzenGroupTitle content="${child.label}" :bordered="false" helpMessage="$child.tipLabel" />
+    #end
+    <a-table :data-source="dataForm.${child.tableModel}"  #if(${child.complexHeaderList.size()}>0) :bordered="true" #end
+             :columns="${aliasname}Columns" size="small" :pagination="false" :scroll="{ x: 'max-content' }">
+        <template #headerCell="{ column }">
+            <span class="required-sign" v-if="column.required">*</span>
+            {{ column.title }}
+            <BasicHelp :text="column.tipLabel" v-if="column.tipLabel && column.title" />
+        </template>
+##    子表字段
+        <template #bodyCell="{ column, index, record }">
+            <template v-if="column.key === 'index'">{{ index + 1 }}</template>
+            #foreach($itemModel in ${child.childList})
+                #set($fieLdsModel = ${itemModel.fieLdsModel})
+                #set($config = ${fieLdsModel.config})
+                #set($mastKey = "${config.projectKey}")
+                #set($beforeVmodel ="${aliasname}${fieLdsModel.vModel}")
+                #set($mastModel="record.${fieLdsModel.vModel}")
+                <template v-if="column.key === #if($!{fieLdsModel.vModel}) '${fieLdsModel.vModel}' #else '${config.formId}' #end">
+##              子表标签生成
+                 #DetailFieldTag($mastKey,$fieLdsModel,$config,$mastModel,$beforeVmodel,'index')
+                </template>
+            #end
+        </template>
+        ##    子表合计
+        #if($child.showSummary)
+            #set($childSummary=true)
+            <template #summary v-if="dataForm.${child.tableModel}?.length">
+                <a-table-summary fixed>
+                    <a-table-summary-row>
+                        <a-table-summary-cell :index="0">合计</a-table-summary-cell>
+                        <a-table-summary-cell v-for="(item, index) in get${aliasName}ColumnSum" :key="index" :index="index + 1" :align="get${aliasName}SummaryCellAlign(index)">{{ item }}</a-table-summary-cell>
+                        <a-table-summary-cell :index="get${aliasName}ColumnSum.length + 1"></a-table-summary-cell>
+                    </a-table-summary-row>
+                </a-table-summary>
+            </template>
+        #end
+    </a-table>
+</a-form-item>
+</a-col>
+#end
+##  子表字段对象列表生成
+#macro(DetailChildTableColumns)
+##  子表列表字段属性
+    #foreach($itemModel in ${context.children})
+    const ${itemModel.aliasLowName}Columns: any[] = computed(() => {
+        let list = [
+            #set($childList = ${itemModel.childList})
+            #foreach($html in ${childList})
+                #set($fieLdsModel = ${html.fieLdsModel})
+                #set($config = ${fieLdsModel.config})
+        #if(!${config.noShow})
+        {
+            title: '${config.label}',
+            dataIndex: #if($!{fieLdsModel.vModel}) '${fieLdsModel.vModel}' #else '${config.formId}' #end,
+            key: #if($!{fieLdsModel.vModel}) '${fieLdsModel.vModel}' #else '${config.formId}' #end,
+            #if($!{config.columnWidth})
+            width: $!{config.columnWidth},
+            #end
+            tipLabel: #if($!{config.tipLabel}) "${config.tipLabel}" #else '' #end,
+            #set($vModelRequired="#if($!{fieLdsModel.vModel})${itemModel.aliasLowName}List-${fieLdsModel.vModel}#else${itemModel.aliasLowName}List-${config.formId}#end")
+            required: false,
+            #if($!{fieLdsModel.thousands}==true)
+            thousands: ${fieLdsModel.thousands},
+            #end
+            align: #if($!{config.tableAlign}) '$!{config.tableAlign}'#else 'left'#end,
+            fixed: #if($!{config.tableFixed} == 'left' || $!{config.tableFixed} == 'right') '$!{config.tableFixed}' #else false #end,
+        },
+        #end
+            #end
+        ];
+        #if($itemModel.showDeleteBtn)
+###子表删除按钮没有的话不生成操作列
+        #if($context.isFlow)
+        list = list.filter(o => judgeShow('${itemModel.tableModel}-' + o.dataIndex));
+        if (!judgeWrite('${itemModel.aliasLowName}List')) {
+            list.push({ title: '操作', showLabel: true, dataIndex: 'action', key: 'action', align: 'center', width: 50 });
+        }
+        #else
+            #if(${context.columnData.useFormPermission})list = list.filter(o => hasFormP('${itemModel.tableModel}-' + o.dataIndex)); #end
+        list.push({ title: '操作', showLabel: true, dataIndex: 'action', key: 'action', align: 'center', width: 50 });
+        #end
+        #end
+        const indexColumn = { title: '序号', showLabel: true, dataIndex: 'index', key: 'index', align: 'center', width: 50 };
+        //子表复杂表头-处理
+        let columnList = list;
+        let complexHeaderList: any[] = #if(${itemModel.complexHeaderList}) ${itemModel.complexHeaderList}; #else []; #end
+        if (complexHeaderList.length) {
+            let childColumns: any[] = [];
+            for (let i = 0; i < complexHeaderList.length; i++) {
+                const e = complexHeaderList[i];
+                e.title = e.fullName;
+                e.align = e.align;
+                e.children = [];
+                e.projectKey = 'complexHeader';
+                if (e.childColumns?.length) {
+                    childColumns.push(...e.childColumns);
+                    for (let j = 0; j < list.length; j++) {
+                        const o = list[j];
+                        if (e.childColumns.includes(o.key) && o.fixed !== 'left' && o.fixed !== 'right')
+                        e.children.push({ ...toRaw(o) });
+                    }
+                }
+            }
+            complexHeaderList = complexHeaderList.filter(o => o.children.length);
+            for (let i = 0; i < list.length; i++) {
+                const item = list[i];
+                if (!childColumns.includes(item.key) || item.fixed === 'left' || item.fixed === 'right')
+                complexHeaderList.push(item);
+            }
+            columnList = complexHeaderList;
+        }
+        let columns =  [indexColumn, ...columnList]
+        const leftFixedList = columns.filter(o => o.fixed === 'left');
+        const rightFixedList = columns.filter(o => o.fixed === 'right');
+        const noFixedList = columns.filter(o => o.fixed !== 'left' && o.fixed !== 'right');
+        return [...leftFixedList, ...noFixedList, ...rightFixedList];
+    });
+##  子表合计参数
+        #if($itemModel.showSummary)
+        //子表合计字段
+        const ${itemModel.aliasLowName}SummaryColumn = computed(() => {
+            let defaultColumns = unref(${itemModel.aliasLowName}Columns);//子表字段
+            let columns: any[] = [];
+            for (let i = 0; i < defaultColumns.length; i++) {
+                const e = defaultColumns[i];
+                if (e.projectKey === 'table' || e.projectKey === 'complexHeader') {
+                    if (e.children?.length)  columns.push(...e.children);
+                } else {
+                    columns.push(e);
+                }
+                if (e.fixed && e.children?.length) {
+                    for (let j = 0; j < e.children.length; j++) {
+                        e.children[j].fixed = e.fixed;
+                    }
+                }
+            }
+            return columns.filter(o => o?.key != 'index' && o?.key != 'action');
+        });
+        //合计方法
+        const get${itemModel.aliasUpName}ColumnSum = computed(() => {
+            const sums: any[] = [];
+            const summaryField: any[] = #if(${itemModel.summaryField}) ${itemModel.summaryField} #else [] #end;
+            const useThousands = key => unref(${itemModel.aliasLowName}SummaryColumn).some(o => o.key === key && o.thousands);
+            const isSummary = key => summaryField.includes(key);
+            const list = unref(${itemModel.aliasLowName}SummaryColumn).filter(o => o.key !== 'index' && o.key !== 'action');
+            list.forEach((column, index) => {
+                let sumVal = state.dataForm.${itemModel.tableModel}.reduce((sum, d) => sum +  + Number(getCmpValOfRow(d, column.key, summaryField || [])), 0);
+                if (!isSummary(column.key)) sumVal = '';
+                sumVal = Number.isNaN(sumVal) ? '' : sumVal;
+                const realVal = sumVal && !Number.isInteger(Number(sumVal)) ? Number(sumVal).toFixed(2) : sumVal;
+                sums[index] = useThousands(column.key) ? thousandsFormat(realVal) : realVal;
+            });
+            return sums;
+        });
+
+        //合计对齐
+        function get${itemModel.aliasUpName}SummaryCellAlign(index) {
+            if (!unref(${itemModel.aliasLowName}SummaryColumn).length) return;
+            return unref(${itemModel.aliasLowName}SummaryColumn)[index]?.align || 'left';
+        }
+        #end
+    #end
+#end
+##  生成掩码配置
+#macro(CreateMaskConfig)
+{
+#foreach($fieLdsModel in ${context.fields})
+    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($linzenkey = $config.projectKey)
+    #if($linzenkey == "input")
+        ${vModel}:#if(${html.maskConfig}) ${html.maskConfig} #else {}#end,
+    #end
+#end
+#foreach($child in ${context.children})
+#set($aliasname = "${child.aliasLowName}")
+#foreach($fieLdsModel in ${child.childList})
+    #set($html = $fieLdsModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($linzenkey = $config.projectKey)
+    #if($linzenkey == "input")
+        ${aliasname}${vModel}:#if(${html.maskConfig}) ${html.maskConfig} #else {}#end,
+    #end
+#end
+#end
+#foreach($ChildField in ${context.columnChildren})
+#foreach($FormMastTableModel in ${ChildField.fieLdsModelList})
+    #set($html = ${FormMastTableModel.mastTable.fieLdsModel})
+    #set($projectKey = ${html.config.projectKey})
+    #set($ChildVmodel =${FormMastTableModel.vModel})
+    #if(${projectKey} == "input")
+        ${ChildVmodel}:#if(${html.maskConfig}) ${html.maskConfig} #else {}#end,
+    #end
+#end
+#end
+}
+#end
+##  生成定位配置
+#macro(CreateLocationScope)
+{
+#foreach($fieLdsModel in ${context.fields})
+    #set($html = $fieLdsModel.formColumnModel.fieLdsModel)
+    #set($vModel = "${html.vModel}")
+    #set($config = $html.config)
+    #set($linzenkey = $config.projectKey)
+    #if($linzenkey == "location")
+        ${vModel}:#if(${html.locationScope}) ${html.locationScope} #else []#end,
+    #end
+#end
+#foreach($child in ${context.children})
+    #set($aliasname = "${child.aliasLowName}")
+    #foreach($fieLdsModel in ${child.childList})
+        #set($html = $fieLdsModel.fieLdsModel)
+        #set($vModel = "${html.vModel}")
+        #set($config = $html.config)
+        #set($linzenkey = $config.projectKey)
+        #if($linzenkey == "location")
+            ${aliasname}${vModel}:#if(${html.locationScope}) ${html.locationScope} #else []#end,
+        #end
+    #end
+#end
+#foreach($ChildField in ${context.columnChildren})
+    #foreach($FormMastTableModel in ${ChildField.fieLdsModelList})
+        #set($html = ${FormMastTableModel.mastTable.fieLdsModel})
+        #set($projectKey = ${html.config.projectKey})
+        #set($ChildVmodel =${FormMastTableModel.vModel})
+        #if(${projectKey} == "location")
+            ${ChildVmodel}:#if(${html.locationScope}) ${html.locationScope} #else []#end,
+        #end
+    #end
+#end
+}
+#end
+

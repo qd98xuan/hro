@@ -1,0 +1,841 @@
+#parse("PublicMacro/AppFormMarco.vm")
+<template>
+    <view class="dynamicModel-list-v">
+        <view class="head-warp com-dropdown">
+            <u-dropdown class="u-dropdown" ref="uDropdown" @open="openData" >
+                <u-dropdown-item title="排序" :options="sortOptions">
+                    <view class="screen-box">
+                        <view class="screen-list" v-if="sortOptions.length">
+                            <view class="u-p-l-20 u-p-r-20 list">
+                                <scroll-view scroll-y="true" style="height: 100%;">
+                                    <u-cell-group :border="false">
+                                        <u-cell-item @click="cellClick(item)" :arrow="false" :title="item.label"
+                                                     v-for="(item, index) in sortOptions" :key="index" :title-style="{
+										color: sortValue.includes(item.value) ? '#2979ff' : '#606266' }">
+                                            <u-icon v-if="sortValue.includes(item.value)" name="checkbox-mark"
+                                                    color="#2979ff" size="32" />
+                                        </u-cell-item>
+                                    </u-cell-group>
+                                </scroll-view>
+                            </view>
+                        </view>
+                        <view v-else class="notData-box u-flex-col">
+                            <view class="u-flex-col notData-inner">
+                                <image :src="icon" class="iconImg"></image>
+                                <text class="notData-inner-text">暂无数据</text>
+                            </view>
+                        </view>
+                        <view class="buttom-actions" v-if="sortOptions.length" style="z-index: 1;">
+                            <u-button class="buttom-btn" @click="handleSortReset">清空</u-button>
+                            <u-button class="buttom-btn" type="primary" @click="handleSortSearch">确定</u-button>
+                        </view>
+                    </view>
+                </u-dropdown-item>
+                <u-dropdown-item title="筛选">
+                    <view class="dropdown-slot-content">
+                        <view class="dropdown-slot-content-main search-main">
+                            <view class="u-p-l-20 u-p-r-20 search-form" v-if="Object.keys(searchForm).length">
+                                <scroll-view scroll-y="true" style="height: 100%;">
+                                    <u-form :label-width="150">
+                                        #if(${context.isKeyword})
+                                        <u-form-item label="关键词">
+                                            <LinzenInput v-model="searchForm.projectKeyword" placeholder="请输入关键词" input-align='right' />
+                                        </u-form-item>
+                                        #end
+                                    #AppSearchRendering()
+                                    </u-form>
+                                </scroll-view>
+                            </view>
+                            <view v-else class="notData-box u-flex-col">
+                                <view class="u-flex-col notData-inner">
+                                    <image :src="icon" class="iconImg"></image>
+                                    <text class="notData-inner-text">暂无数据</text>
+                                </view>
+                            </view>
+                            <view class="buttom-actions">
+                                <u-button class="buttom-btn" @click="reset">重置</u-button>
+                                <u-button class="buttom-btn" type="primary" @click="closeDropdown">检索</u-button>
+                            </view>
+                            <view class="dropdown-slot-bg" @click="$refs.uDropdown.close()"></view>
+                        </view>
+                    </view>
+                </u-dropdown-item>
+            </u-dropdown>
+        </view>
+        <view class="list-warp">
+            <mescroll-uni ref="mescrollRef" @init="mescrollInit" @down="downCallback" @up="upCallback" :up="upOption" top="80">
+                <view class="list u-p-b-20 u-p-l-20 u-p-r-20">
+                    <view class="list-box">
+                        <uni-swipe-action ref="swipeAction">
+                            <uni-swipe-action-item v-for="(item, index) in list" :key="item.${pKeyName}" :threshold="0" :right-options="options">
+                                <view class="item" @click="goDetail(item.${pKeyName},item)">
+                                    <view class="u-line-1 item-cell" v-for="(column,i) in columnList" :key="i">
+                                        <template v-if="column.projectKey != 'table'">
+                                            <text class="item-cell-label">{{column.label}}:</text>
+                                            <text class="item-cell-content" v-if="['calculate','inputNumber'].includes(column.projectKey) && column.thousands">{{toThousands(item[column.prop],column)}}</text>
+                                            <text class="item-cell-content text-primary" v-else-if="column.projectKey == 'relationForm'" @click.stop="relationFormClick(item,column)" >{{item[column.prop]}}</text>
+                                            <view class="item-cell-content" v-else-if="column.projectKey == 'sign'">
+                                                <LinzenSign v-model="item[column.prop]" align="left" detailed />
+                                            </view>
+                                            <view class="item-cell-content" v-else-if="column.projectKey == 'uploadImg'" @click.stop>
+                                                <LinzenUploadImg v-model="item[column.prop]" detailed simple v-if="item[column.prop]&&item[column.prop].length" />
+                                            </view>
+                                            <view class="item-cell-content" v-else-if="column.projectKey == 'uploadFile'" @click.stop>
+                                                <LinzenUploadFile v-model="item[column.prop]" detailed v-if="item[column.prop]&&item[column.prop].length" align="left"  />
+                                            </view>
+                                            <view class="item-cell-content" v-else-if="column.projectKey == 'rate'">
+                                                <LinzenRate v-model="item[column.prop]" :max="column.count" :allowHalf="column.allowHalf" disabled />
+                                            </view>
+                                            <view class="item-cell-content item-cell-slider" v-else-if="column.projectKey == 'slider'">
+                                                <LinzenSlider v-model="item[column.prop]" :min="column.min" :max="column.max" :step="column.step" disabled />
+                                            </view>
+                                            <view class="item-cell-content" v-else-if="column.projectKey == 'input'">
+                                                <LinzenInput v-model="item[column.prop]" detailed showOverflow :useMask="column.useMask" :maskConfig="column.maskConfig" align='left' />
+                                            </view>
+                                            <text class="item-cell-content" v-else>{{item[column.prop]}}</text>
+                                        </template>
+                                        <tableCell v-else @click.stop :label="column.label" :childList="item[column.prop]" @cRelationForm="relationFormClick" :children="column.children"
+                                                   ref="tableCell" :pageLen="3"/>
+                                    </view>
+                                    #if(${context.isFlow})
+                                    <view class="item-cell">
+                                        <text class="item-cell-label">审批状态：</text>
+                                        <text :class="getFlowStatus(item.flowState).statusCss">
+                                            {{getFlowStatus(item.flowState).text}}
+                                        </text>
+                                    </view>
+                                    #end
+                                </view>
+                                <template v-slot:right>
+                                    <view class="right-option-box">
+                                        <view class="right-option" v-for="(it,i) in options" @click="handleClick(index)"
+                                              :key="i">
+                                            <text>{{it.text}}</text>
+                                        </view>
+                                    </view>
+                                </template>
+                            </uni-swipe-action-item>
+                        </uni-swipe-action>
+                    </view>
+                </view>
+            </mescroll-uni>
+        </view>
+        #foreach($btns in ${context.columnBtnsList})
+            #if(${btns.value}=='add')
+                <view class="com-addBtn" @click="addPage()" #if(${useBtnPermission}==true) v-if="${setPermission}.hasBtnP('btn_add',${menuId})" #end>
+                    <u-icon name="plus" size="60" color="#fff" />
+                </view>
+            #end
+        #end
+    #if(${context.isFlow})
+        <u-picker mode="selector" v-model="show" :default-selector="[0]" title="请选择流程" :range="templateList" range-key="fullName" @confirm="confirm"></u-picker>
+    #end
+    </view>
+</template>
+<script>
+    import {
+        FlowJsonList
+    } from '@/api/workFlow/flowEngine'
+    import resources from '@/libs/resources.js'
+    import MescrollMixin from "@/uni_modules/mescroll-uni/components/mescroll-uni/mescroll-mixins.js";
+    import tableCell from '../dynamicModel/components/tableCell.vue'
+    #if(${context.isFlow})
+    import {getFormById} from '@/api/workFlow/workFlowForm'
+    #end
+    import {
+        getDictionaryDataSelector,
+        getDataInterfaceRes
+    } from '@/api/common'
+    import request from '@/utils/request'
+    import appColumnList from './columnList'
+    export default {
+        mixins: [MescrollMixin],
+        components: {
+            tableCell
+        },
+        data() {
+            return {
+                icon: resources.message.nodata,
+                show: false,
+                templateList: [],
+                sortValue: [],
+                searchForm: {
+                    #if(${context.isKeyword})
+                    projectKeyword:'',
+                    #end
+                    #foreach($searchAll in ${context.searchAll})
+                        #set($searckey = ${searchAll.key})
+                        #set($html = ${searchAll.html})
+                        #set($model = "${html.vModel}")
+                        #set($config = $html.config)
+                        #set($value = $html.value)
+                        #set($defaultValue="undefined")
+                        #if(${value})
+                            #if($!config.valueType=='String')
+                                #set($defaultValue="'"+"${value}"+"'")
+                            #else
+                                #set($defaultValue=${value})
+                            #end
+                        #end
+                    ${model}:$defaultValue,
+                    #end
+                },
+                downOption: {
+                    use: true,
+                    auto: false
+                },
+                dataOptions:{
+                },
+                upOption: {
+                    page: {
+                        num: 0,
+                                size: ${context.pageSize},
+                        time: null,
+                    },
+                    empty: {
+                        use: true,
+                                icon: resources.message.nodata,
+                                tip: "暂无数据",
+                                fixed: true,
+                                top: "300rpx",
+                                zIndex: 5,
+                    },
+                    textNoMore: '没有更多数据',
+                            toTop: {
+                        bottom: 250
+                    }
+                },
+                #foreach($searchAll in ${context.searchAll})
+                    #set($searckey = ${searchAll.key})
+                    #set($html = ${searchAll.html})
+                    #list($html,'')
+                #end
+                list: [],
+                appColumnList:appColumnList,
+                listQuery: {
+                    moduleId:'${context.moduleId}',
+                    sidx: '',
+                    keyword: '',
+                    json: ''
+                },
+                options: [
+                    #foreach($btns in ${context.columnBtnsList})
+                        #set($remove = "删除")
+                        #if(${btns.value}=='remove')
+                            #set($remove = "${btns.label}")
+                    {
+                        text: '${remove}',
+                        style: {
+                            backgroundColor: '#dd524d'
+                        }
+                    }
+                        #end
+                    #end
+                ],
+                sortOptions:[
+                    #foreach($html in ${context.sortList})
+                        {
+                            label: '${html.label}降序',
+                            sidx: '${html.prop}',
+                            value: '-${html.prop}',
+                            sort: 'desc'
+                        },
+                        {
+                            label: '${html.label}升序',
+                            sidx: '${html.prop}',
+                            value: '${html.prop}',
+                            sort: 'asc'
+                        },
+                    #end
+                ],
+                ableAll:{
+                    #foreach($searchAll in ${context.searchAll})
+                        #set($searckey = ${searchAll.key})
+                        #set($html = ${searchAll.html})
+                        #set($childList = '')
+                        #appableAll($html $childList)
+                    #end
+                },
+                interfaceRes:{
+                    #foreach($searchAll in ${context.searchAll})
+                        #set($searckey = ${searchAll.key})
+                        #set($html = ${searchAll.html})
+                        #faceRes($html,'')
+                    #end
+                },
+                menuId:'',
+                #if(${context.isFlow})
+                enCode: '${context.flowEnCode}',
+                formId: '${context.flowId}',
+                #end
+                columnList:[],
+                type:'${context.type}',
+                key:new Date(),
+                dataValue:{},
+                userInfo:{},
+                firstInitSearchData:false,
+            }
+        },
+        onLoad(e){
+            this.userInfo = uni.getStorageSync('userInfo') || {}
+            this.menuId = e.menuId
+            uni.$on('refresh', () => {
+                this.list = [];
+                this.mescroll.resetUpScroll();
+            })
+            this.setDefaultQuery()
+            this.dataAll()
+            this.getColumnList()
+            #if(${context.isFlow})
+            this.getFormById()
+            #end
+        },
+        onUnload() {
+            uni.$off('refresh')
+        },
+        methods:{
+            toThousands(val, column) {
+                if (val) {
+                    let valList = val.toString().split('.')
+                    let num = Number(valList[0])
+                    let newVal = column.thousands ? num.toLocaleString() : num
+                    return valList[1] ? newVal + '.' + valList[1] : newVal
+                } else {
+                    return val
+                }
+            },
+            getJsonList() {
+                FlowJsonList(this.flowId,'1').then(res => {
+                    this.templateList = res.data;
+                })
+            },
+            getFormById() {
+                getFormById(this.formId).then(res => {
+                    this.flowId = res.data&&res.data.id
+                    this.enCode = res.data&&res.data.enCode
+                    this.getJsonList()
+                })
+            },
+            dataAll(){
+                #foreach($searchAll in ${context.searchAll})
+                    #set($searckey = ${searchAll.key})
+                    #set($html = ${searchAll.html})
+                    #options($html '')
+                #end
+            },
+            #foreach($searchAll in ${context.searchAll})
+                #set($searckey = ${searchAll.key})
+                #set($html = ${searchAll.html})
+                #codeOptionsList($html)
+            #end
+            openData(e){
+                if(e==1){
+                    //this.reset()
+                }
+            },
+            setDefaultQuery() {
+                const defaultSortConfig=#if(${context.defaultSortConfig}) ${context.defaultSortConfig} #else []#end
+                const sortField = defaultSortConfig.map(o => (o.sort === 'desc' ? '-' : '') + o.field)
+                this.listQuery.sidx = sortField.join(',')
+            },
+            //初始化查询的默认数据
+            async initSearchData() {
+                #set($formModel='this.searchForm')
+                #foreach($html in ${context.mastsearchList})
+                    #set($fieLdsModel=$html)
+                    #indexDefaultData('mast',$fieLdsModel,${formModel})
+                #end
+                #foreach($html in ${context.searchList})
+                    #set($fieLdsModel=$html)
+                    #indexDefaultData('mastTable',$fieLdsModel,${formModel})
+                #end
+                #foreach($html in ${context.childSearch})
+                    #set($fieLdsModel=$html)
+                    #indexDefaultData('table',$fieLdsModel,${formModel})
+                #end
+                this.dataValue = JSON.parse(JSON.stringify(this.searchForm))
+            },
+            relationFormClick(item,column) {
+                let vModel = column.__vModel__ +"_id"
+                let id = item[vModel]
+                let modelId = column.modelId
+                if (!id || !modelId) return
+                let config = {
+                    modelId: modelId,
+                    id: id,
+                    formTitle: '详情',
+                    noShowBtn: 1
+                }
+                this.$nextTick(() => {
+                    const url ='/pages/apply/dynamicModel/detail?config=' + this.linzen.base64.encode(JSON.stringify(config),"UTF-8")
+                    uni.navigateTo({
+                        url: url
+                    })
+                })
+            },
+            async upCallback(page) {
+                if(!this.firstInitSearchData) {
+                    await this.initSearchData()
+                    this.firstInitSearchData = true
+                }
+                const query = {
+                    currentPage: page.num,
+                    pageSize: page.size,
+                    menuId : this.menuId,
+                    ...this.listQuery,
+                    ...this.searchForm,
+                    #set($queryDataType="0")
+                    #if(${context.page}=='1')
+                        #set($queryDataType="1")
+                    #end
+                    dataType:${queryDataType},
+                }
+                request({
+                    url: '/api/${context.module}/${context.className}/getList',
+                    method: 'post',
+                    data: query,
+                }).then(res => {
+                    let _list = res.data.list;
+                    #set($list = "this.mescroll.endSuccess(_list.length);")
+                    #if(${context.page}=='1')
+                        #set($list = "this.mescroll.endSuccess(_list.length, false);")
+                    #end
+                    ${list}
+                    if (page.num == 1) this.list = [];
+                    const list = _list.map(o => ({
+                        show: false,
+                        ...o
+                    }));
+                    this.list = this.list.concat(_list);
+                }).catch(() => {
+                    this.mescroll.endErr();
+                })
+            },
+            handleClick(index, index1) {
+                #if(${useBtnPermission}==true)
+                if (!this.${setPermission}.hasBtnP("btn_remove",this.${menuId})) return this.$u.toast("未开启删除权限")
+                #end
+                const item = this.list[index]
+                #if(${context.isFlow})
+                if([1,2,3,5].includes(item.flowState)){
+                    this.$u.toast("流程正在审核,请勿删除")
+                            this.list[index].show = false
+                    return
+                }
+                #end
+                request({
+                    url: '/api/${context.module}/${context.className}/' + item.${pKeyName},
+                    method: 'delete'
+                }).then(res => {
+                    uni.showToast({
+                        title: res.msg,
+                        complete: () => {
+                            #set($toast='this.$u.toast(res.msg)')
+                            ${toast}
+                            this.mescroll.resetUpScroll()
+                        }
+                    })
+                })
+            },
+            open(index) {
+                this.list[index].show = true;
+                this.list.map((val, idx) => {
+                    if (index != idx) this.list[idx].show = false;
+                })
+            },
+            search() {
+                if (this.isPreview == '1') return
+                this.searchTimer && clearTimeout(this.searchTimer)
+                this.searchTimer = setTimeout(() => {
+                    this.list = [];
+                    this.mescroll.resetUpScroll();
+                }, 300)
+            },
+        #if(${context.isFlow})
+            goDetail(id, item) {
+                let flowtaskid = item.flowTaskId
+                let flowState =item.flowState
+                let flowId =item.flowId
+                let btnType = ''
+                let btnList = []
+                #foreach($btns in ${context.columnBtnsList})
+                    #if(${btns.value}=='edit')
+                        btnList.push('btn_edit')
+                    #end
+                    #if(${btns.value}=='detail')
+                        btnList.push('btn_detail')
+                    #end
+                #end
+                if(btnList.includes('btn_detail')){
+                    btnType = "btn_detail"
+                }
+                if(btnList.includes('btn_edit')){
+                    btnType = "btn_edit"
+                }
+                if(!btnType) return
+                #set($edit="")
+                #set($detail="")
+                #if(${useBtnPermission}==true)
+                    #foreach($btns in ${context.columnBtnsList})
+                        #if(${btns.value}=='edit')
+                            #set($edit="btn_edit")
+                        #end
+                        #if(${btns.value}=='detail')
+                            #set($detail="btn_detail")
+                        #end
+                    #end
+                    if(!this.${setPermission}.hasBtnP('${edit}',this.${menuId}) && !this.${setPermission}.hasBtnP('${detail}',this.${menuId})) return
+                    if(this.${setPermission}.hasBtnP('${detail}',this.${menuId})) btnType = 'btn_detail'
+                    if(this.${setPermission}.hasBtnP('${edit}',this.${menuId})) btnType = 'btn_edit'
+                #end
+                let ids = flowtaskid?flowtaskid:id
+                this.flowId = flowId?flowId:this.templateList[0].id
+                this.jumPage(ids, flowState,btnType)
+            },
+            addPage() {
+                if (!this.templateList.length) return this.$u.toast('流程不存在')
+                if (this.templateList.length > 1) {
+                    this.show = true
+                } else {
+                    this.flowId = this.templateList[0].id
+                    this.jumPage()
+                }
+            },
+            confirm(e) {
+                this.flowId = this.templateList[e[0]].id
+                this.jumPage()
+            },
+            jumPage(id, status,btnType){
+                if (!id && !status) btnType = 'btn_add'
+                let _title=""
+                if(btnType=='btn_add'){
+                    _title = "新增"
+                }
+                if(btnType=='btn_detail'){
+                    _title = "详情"
+                }
+                if(btnType=='btn_edit'){
+                    _title = "编辑"
+                }
+                let opType = '-1'
+                if ([1,2,5].includes(status)) opType = 0
+                const config = {
+                    id: id || '',
+                    enCode: this.enCode,
+                    flowId: this.flowId,
+                    formType: 1,
+                    type: 1,
+                    opType,
+                    status: status || '',
+                    fullName: _title,
+                    jurisdictionType: btnType || ''
+                }
+                uni.navigateTo({
+                    url: '/pages/workFlow/flowBefore/index?config=' + this.linzen.base64.encode(JSON.stringify(config), "UTF-8")
+                })
+            },
+            getFlowStatus(val) {
+                let status
+                switch (val) {
+                    case 0:
+                        status = {
+                            text: '等待提交',
+                            statusCss: 'u-type-info'
+                        }
+                        break;
+                    case 1:
+                        status = {
+                            text: '等待审核',
+                            statusCss: 'u-type-primary'
+                        }
+                        break;
+                    case 2:
+                        status = {
+                            text: '审核通过',
+                            statusCss: 'u-type-success'
+                        }
+                        break;
+                    case 3:
+                        status = {
+                            text: '审核驳回',
+                            statusCss: 'u-type-error'
+                        }
+                        break;
+                    case 4:
+                        status = {
+                            text: '审核撤回',
+                            statusCss: 'u-type-error'
+                        }
+                        break;
+                    case 5:
+                        status = {
+                            text: '审核终止',
+                            statusCss: 'u-type-info'
+                        }
+                        break;
+                    default:
+                        status = {
+                            text: '等待提交',
+                            statusCss: 'u-type-info'
+                        }
+                        break;
+                }
+                return status
+            },
+        #else
+            goDetail(id) {
+                let btnType = ''
+                let btnList = []
+                #foreach($btns in ${context.columnBtnsList})
+                    #if(${btns.value}=='edit')
+                        btnList.push('btn_edit')
+                    #end
+                    #if(${btns.value}=='detail')
+                        btnList.push('btn_detail')
+                    #end
+                #end
+                #set($edit="")
+                #set($detail="")
+                #if(${useBtnPermission}==true)
+                    #foreach($btns in ${context.columnBtnsList})
+                        #if(${btns.value}=='edit')
+                            #set($edit="btn_edit")
+                        #end
+                        #if(${btns.value}=='detail')
+                            #set($detail="btn_detail")
+                        #end
+                    #end
+                    if(!this.${setPermission}.hasBtnP('${detail}',this.${menuId})){
+                        btnList = btnList.filter(o=>{return o !== '${detail}'})
+                    }
+                    if(!this.${setPermission}.hasBtnP('${edit}',this.${menuId})){
+                        btnList = btnList.filter(o=>{return o !== '${edit}'})
+                    }
+                #end
+                if(btnList.length==0) return
+                this.jumPage(id,btnList)
+            },
+            addPage() {
+                this.jumPage()
+            },
+            jumPage(id, btnList) {
+                let idVal = id ? "&id=" + id : ''
+                let idList = []
+                for(let i=0;i<this.list.length;i++){
+                    idList.push(this.list[i].${pKeyName})
+                }
+                let idListVal = "&idList="+idList
+                if (!id){
+                    uni.navigateTo({
+                        url: "./form?menuId=" + this.menuId + "&jurisdictionType=btn_add"
+                    })
+                } else if(btnList.includes('btn_detail')){
+                    uni.navigateTo({
+                        url: "./detail?menuId=" + this.menuId + "&btnList=" + btnList + idVal+idListVal
+                    })
+                } else if(btnList.includes('btn_edit')){
+                    uni.navigateTo({
+                        url: "./form?menuId=" + this.menuId + "&jurisdictionType=btn_edit&btnList=" + btnList + idVal+idListVal
+                    })
+                }
+            },
+        #end
+            getColumnList() {
+                let columnPermissionList = []
+                let _appColumnList =this.appColumnList
+                #if(${context.useColumnPermission}==true)
+                    let permissionList = uni.getStorageSync('permissionList')
+                    let list = permissionList.filter(o => o.modelId === this.menuId)
+                    let _columnList = list[0] && list[0].column ? list[0].column : []
+                    for (let i = 0; i < _appColumnList.length; i++) {
+                        let _app = _appColumnList[i].prop
+                        inner:  for (let j = 0; j < _columnList.length; j++) {
+                            let _encode = _columnList[j].enCode
+                            if(_app == _encode){
+                                columnPermissionList.push(this.appColumnList[i])
+                                break inner
+                            }
+                        }
+                    }
+                #else
+                    for (let i = 0; i < _appColumnList.length; i++) {
+                        columnPermissionList.push(_appColumnList[i])
+                    }
+                #end
+                this.columnList = this.transformColumnList(columnPermissionList, this.dataOptions)
+            },
+            transformColumnList(columnList, dataOptions) {
+                let list = []
+                for (let i = 0; i < columnList.length; i++) {
+                    let e = columnList[i]
+                    let columProp = e.prop
+                    let label = e.label
+                    let option = null
+                    let options = columProp + "Options"
+                    if (!columProp.includes('-')) {
+                        columProp = columProp
+                        if(this.type=='4'){
+                            columProp = columProp +"_name"
+                        }
+                        if(label.length>4){
+                            label = label.substring(0, 4)
+                        }
+                        e.label = label
+                        e.prop = columProp
+                        e.option = option
+                        list.push(e)
+                    } else {
+                        e.vModel = columProp.split('-')[1]
+                        e.childLabel = e.label.split('-')[1]
+                        options = e.vModel + "Options"
+                        let prop = columProp.split('-')[0]
+                        let label = e.label.split('-')[0]
+                        let newItem = {
+                            align: "center",
+                            projectKey: "table",
+                            prop,
+                            label,
+                            children: []
+                        }
+                        if (!list.some(o => o.prop === prop)) list.push(newItem)
+                        for (let i = 0; i < list.length; i++) {
+                            if (list[i].prop === prop) {
+                                e.prop = e.prop
+                                e.vModel = e.vModel
+                                if(this.type=='4'){
+                                    e.prop = e.prop+"_name"
+                                    e.vModel = e.vModel+"_name"
+                                }
+                                e.option = option
+                                list[i].children.push(e)
+                                break
+                            }
+                        }
+                    }
+                }
+                return list
+            },
+            cellClick(item) {
+                const findIndex = this.sortValue.findIndex(o => o === item.value);
+                if (findIndex < 0) {
+                    const findLikeIndex = this.sortValue.findIndex(o => o.indexOf(item.sidx) > -1);
+                    if (findLikeIndex > -1) this.sortValue.splice(findLikeIndex, 1)
+                    this.sortValue.push(item.value)
+                } else {
+                    this.sortValue.splice(findIndex, 1)
+                }
+            },
+            handleSortReset() {
+                this.sortValue = []
+            },
+            handleSortSearch() {
+                if (this.sortValue.length) {
+                    this.listQuery.sidx = this.sortValue.join(',')
+                } else {
+                    this.setDefaultQuery()
+                }
+                this.$refs.uDropdown.close();
+                this.$nextTick(() => {
+                    this.list = [];
+                    this.mescroll.resetUpScroll();
+                })
+            },
+            reset() {
+                this.searchForm = JSON.parse(JSON.stringify(this.dataValue))
+                this.key = new Date()
+            },
+            closeDropdown() {
+                this.$refs.uDropdown.close();
+                this.$nextTick(() => {
+                    this.list = [];
+                    this.mescroll.resetUpScroll();
+                })
+            },
+            dataList(data){
+                let _list =data.list
+                return _list;
+            },
+        },
+    }
+</script>
+
+<style lang="scss">
+    page {
+        background-color: #f0f2f6;
+        height: 100%;
+        /* #ifdef MP-ALIPAY */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        /* #endif */
+    }
+
+    :deep(.u-cell) {
+        padding: 0rpx;
+        height: 112rpx;
+    }
+
+    .screen-box {
+        background-color: #fff;
+        height: 100%;
+
+        .screen-list {
+            width: 100%;
+            height: 100%;
+
+            .list {
+                height: calc(100% - 88rpx);
+                overflow-y: scroll;
+            }
+        }
+    }
+
+    .item {
+        padding: 0 !important;
+    }
+
+    .notData-box {
+        width: 100%;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        padding-bottom: 200rpx;
+
+        .notData-inner {
+            width: 280rpx;
+            height: 308rpx;
+            align-items: center;
+
+            .iconImg {
+                width: 100%;
+                height: 100%;
+            }
+
+            .notData-inner-text {
+                padding: 30rpx 0;
+                color: #909399;
+            }
+        }
+    }
+
+    .right-option-box {
+        display: flex;
+        width: max-content;
+
+        .right-option {
+            width: 144rpx;
+            height: 100%;
+            font-size: 16px;
+            color: #fff;
+            background-color: #dd524d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .more-option {
+            background-color: #1890ff;
+        }
+    }
+</style>

@@ -1,0 +1,90 @@
+package com.linzen.service;
+
+import com.linzen.base.service.SuperService;
+import com.linzen.entity.EmployeeEntity;
+import com.linzen.model.EmployeeModel;
+import com.linzen.model.employee.EmployeeImportVO;
+import com.linzen.model.employee.PaginationEmployee;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 职员信息
+ *
+ * @author FHNP
+ * @version V0.0.1
+ * @copyright 领致信息技术有限公司
+ */
+public interface EmployeeService extends SuperService<EmployeeEntity> {
+
+    /**
+     * 列表
+     *
+     * @return
+     */
+    List<EmployeeEntity> getList();
+
+    /**
+     * 列表
+     *
+     * @param paginationEmployee
+     * @return
+     */
+    List<EmployeeEntity> getList(PaginationEmployee paginationEmployee);
+
+    /**
+     * 信息
+     *
+     * @param id 主键值
+     * @return
+     */
+    EmployeeEntity getInfo(String id);
+
+    /**
+     * 删除
+     *
+     * @param entity 实体对象
+     */
+    void delete(EmployeeEntity entity);
+
+    /**
+     * 创建
+     *
+     * @param entity 实体对象
+     */
+    void create(EmployeeEntity entity);
+
+    /**
+     * 更新
+     *
+     * @param id     主键值
+     * @param entity 实体对象
+     */
+    void update(String id, EmployeeEntity entity);
+
+    /**
+     * 导入预览
+     *
+     * @param personList 实体对象
+     * @return
+     */
+    Map<String, Object> importPreview(List<EmployeeModel> personList);
+
+    /**
+     * 导入数据
+     *
+     * @param dt 数据源
+     * @return
+     */
+    EmployeeImportVO importData(List<EmployeeModel> dt);
+
+    /**
+     * 导出pdf
+     *
+     * @param list      集合数据
+     * @param outputUrl 保存路径
+     * @return
+     */
+    void exportPdf(List<EmployeeEntity> list, String outputUrl);
+}

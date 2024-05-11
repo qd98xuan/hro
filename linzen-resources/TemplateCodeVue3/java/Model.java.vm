@@ -1,0 +1,100 @@
+#parse("PublicMacro/ConstantMarco.vm")
+#ConstantParams()
+#set($moduleName = "${context.genInfo.className.toLowerCase()}")
+#if($context.isForm)
+    #set($package = "package ${context.package}.${context.isForm}.model.${moduleName};")
+#else
+    #set($package = "package ${context.package}.model.${moduleName};")
+#end
+${package}
+
+import lombok.Data;
+import java.util.List;
+import java.util.Date;
+import java.math.BigDecimal;
+import com.alibaba.fastjson.annotation.JSONField;
+import cn.afterturn.easypoi.excel.annotation.Excel;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ *
+ * ${context.genInfo.description}
+ * 版本： ${context.genInfo.version}
+ * 版权: ${context.genInfo.copyright}
+ * 作者： ${context.genInfo.createUser}
+ * 日期： ${context.genInfo.createDate}
+ */
+@Data
+public class ${context.className}Model  {
+
+#if($!{context.thisKeyFields})
+    #set($keyField =${context.thisKeyFields.field})
+    /** 子表：${context.className} 主键：${keyField} **/
+    @JSONField(name = "${keyField}")
+    @JsonProperty("${keyField}")
+    #if(${context.thisKeyFields.dataType} =="int")
+    private Integer ${keyField};
+    #elseif(${context.thisKeyFields.dataType} == "bigint")
+    private Long ${keyField};
+    #else
+    private String ${keyField};
+    #end
+#end
+#foreach($html in ${context.children.childList})
+    #set($fieLdsModel = ${html.fieLdsModel})
+    #set($config = ${fieLdsModel.config})
+    #set($linzenkey = ${config.projectKey})
+    #set($vModel = "${fieLdsModel.vModel}")
+    #set($fieldName=${config.label})
+    /** ${fieldName} **/
+    #if($fieLdsModel.needImport)
+    @Excel(name = "${fieldName}",orderNum = "1",isImportField = "true")
+    #end
+    #if(${linzenkey}=='datePicker')
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private Long ${vModel};
+
+    #elseif(${linzenkey}=='inputNumber' || ${linzenkey}=='calculate')
+        #if(${fieLdsModel.precision}==0)
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private Integer ${vModel};
+
+        #else
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private BigDecimal ${vModel};
+
+        #end
+    #elseif(${linzenkey}=='slider'|| ${linzenkey}=='rate')
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private BigDecimal ${vModel};
+
+    #elseif(${linzenkey}=='relationFormAttr'|| ${linzenkey}=='popupAttr')
+        #if(${fieLdsModel.isStorage} == 0)
+            #set($vModel ="${fieLdsModel.relationField}_${fieLdsModel.showField}")
+        #end
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private String ${vModel};
+
+    #elseif(${linzenkey}=='relationForm')
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private String ${vModel};
+    private String ${vModel}_id;
+
+    #elseif(${multipleUnit.contains($linzenkey)} || ${UploadFileUnit.contains(${linzenkey})})
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private Object ${vModel};
+
+    #else
+    @JSONField(name = "${vModel}")
+    @JsonProperty("${vModel}")
+    private String ${vModel};
+    #end
+#end
+}
